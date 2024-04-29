@@ -1,57 +1,82 @@
+import socket
 
 
 
 class controllingChargebyteBoard:
-    def __init__( self ):
+
+
+    def __init__( self, host: str, port: int ):
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((host, port))
+
+
+    def send_packet( self, service_id: int, payload: bytearray ):
         pass
 
 
-    def connect( host: str, port: int ):
-        pass
+    def set_pwm( self, frequency: int, dutycycle: int ):
+        low_freq = ( frequency & 0xff )
+        high_freq = ( frequency >> 8 ) & 0xff
+        low_duty = ( dutycycle & 0xff )
+        high_duty =  ( dutycycle >> 8 ) & 0xff
+        self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
 
 
-    def send_packet(service_id: int, payload: bytearray):
-        pass
+    def get_pwm( self ):
+        self.send_packet( 0x10, bytearray() )
 
-    def get_pwm():
-        pass
 
     def control_pwm():
-        pass
+        self.send_packet( 0x12, bytearray())
+
 
     def get_ucp():
-        pass
+        self.send_packet( 0x14, bytearray())
+
 
     def set_ucp():
-        pass
+        self.send_packet( 0x15, bytearray())
 
-    def lock_and_unlock_cable_one():
-        pass
 
-    def lock_and_unlock_cable_two():
-        pass
+    def lock_cable_one():
+        self.send_packet( 0x17, bytearray())
 
-    def get_lock_motor_fault_pin():
-        pass
+
+    def unlock_cable_two():
+        self.send_packet( 0x18, bytearray())
+
+
+    def get_motor_fault_pin():
+        self.send_packet( 0x1A, bytearray())
+
 
     def set_cyclic_process_data():
-        pass
+        self.send_packet( 0x20, bytearray())
+
 
     def cyclic_process_data():
-        pass
+        self.send_packet( 0x20, bytearray())
+
 
     def push_button_simple_connect():
-        pass
+        self.send_packet( 0x31, bytearray())
 
-    def execute_software_reset_on_device():
-        pass
+
+    #execute software reset on device
+    def reset():
+        self.send_packet( 0x33, bytearray())
+
 
     def x_is_sent_by_device_after_reset():
-        pass
+        self.send_packet( 0x12, bytearray())
 
-    def activate_proximity_pilot_resistor_():
-        pass
 
-    def enable_and_disable_the_pullup_resistor_of_the_proximity_pin():
-        pass
+    def activate_proximity_pilot_resistor():
+        self.send_packet( 0x50, bytearray())
+
+
+    def enable_disable_the_pullup_resistor_of_the_proximity_pin():
+        self.send_packet( 0x51, bytearray())
+
+
 
