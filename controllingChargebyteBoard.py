@@ -26,57 +26,69 @@ class controllingChargebyteBoard:
         self.send_packet( 0x10, bytearray() )
 
 
-    def control_pwm():
-        self.send_packet( 0x12, bytearray())
+    def control_pwm( self, control_code: int ):
+        # 0 = disable pwm
+        # 1 = enable pwm
+        # 2 = query pwm generation status
+        self.send_packet( 0x12, bytearray( control_code ))
 
 
-    def get_ucp():
+    def get_ucp( self ):
         self.send_packet( 0x14, bytearray())
 
 
-    def set_ucp():
-        self.send_packet( 0x15, bytearray())
+    def set_ucp( self, resistance: int ):
+        #0 = 2.7 
+        #1 = 1.3
+        #2 = 347
+        #3 to 7 are reserved (whatever it means)
+        self.send_packet( 0x15, bytearray(resistance))
 
 
-    def lock_cable_one():
-        self.send_packet( 0x17, bytearray())
+    def lock_unlock_cable_one( self, command:int ):
+        self.send_packet( 0x17, bytearray(command) )
 
 
-    def unlock_cable_two():
-        self.send_packet( 0x18, bytearray())
+    def lock_unlock_cable_two( self, command:int ):
+        #0 unlock the socket
+        #1 lock the socket
+        #2 request status
+        #3 to 255 reserved
+        self.send_packet( 0x18, bytearray(command) )
 
 
-    def get_motor_fault_pin():
-        self.send_packet( 0x1A, bytearray())
+    def get_motor_fault_pin( self ):
+        self.send_packet( 0x1A, bytearray() )
 
 
-    def set_cyclic_process_data():
-        self.send_packet( 0x20, bytearray())
+    def set_cyclic_process_data( self, interval:int ):
+        self.send_packet( 0x20, bytearray(interval) )
 
 
-    def cyclic_process_data():
-        self.send_packet( 0x20, bytearray())
-
-
-    def push_button_simple_connect():
-        self.send_packet( 0x31, bytearray())
+    def push_button_simple_connect( self, parameter:int ):
+        self.send_packet( 0x31, bytearray(parameter) )
 
 
     #execute software reset on device
-    def reset():
+    def reset( self ):
         self.send_packet( 0x33, bytearray())
 
 
-    def x_is_sent_by_device_after_reset():
+    def x_is_sent_by_device_after_reset( self ):
         self.send_packet( 0x12, bytearray())
 
 
-    def activate_proximity_pilot_resistor():
-        self.send_packet( 0x50, bytearray())
+    def activate_proximity_pilot_resistor( self, control:int ):
+        self.send_packet( 0x50, bytearray(control))
 
 
-    def enable_disable_the_pullup_resistor_of_the_proximity_pin():
-        self.send_packet( 0x51, bytearray())
+    def enable_pullup_resistor( self ):
+        #Control=0 deactivates the pullup, all other values activate the pullup
+        self.send_packet( 0x51, bytearray([3]) )
+
+
+    def disable_the_pullup_resistor( self ):
+        self.send_packet( 0x51, bytearray([0]))
 
 
 
