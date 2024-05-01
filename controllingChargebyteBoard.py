@@ -11,7 +11,7 @@ class controllingChargebyteBoard:
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
-        pass
+        self.s.send(bytearray([service_id] + payload))
 
 
     def set_pwm( self, frequency: int, dutycycle: int ):
