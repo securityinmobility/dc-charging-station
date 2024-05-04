@@ -1,15 +1,15 @@
 import socket
 
 
-
 class controllingChargebyteBoard:
+
     def __init__( self, host: str, port: int ):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
-        self.s.send(bytearray([service_id] + payload))
+        self.s.send( bytearray([service_id] + payload) )
 
 
     def test_devices( self ):
@@ -33,6 +33,8 @@ class controllingChargebyteBoard:
         # 0 = disable pwm
         # 1 = enable pwm
         # 2 = query pwm generation status
+        if( control_code < 0 or control_code > 2 ):
+            raise ValueError('The control code must be 0, 1 or 2', control_code )
         self.send_packet( 0x12, bytearray( control_code ))
 
 
@@ -44,7 +46,9 @@ class controllingChargebyteBoard:
         #0 = 2.7 
         #1 = 1.3
         #2 = 347
-        #3 to 7 are reserved (whatever it means)
+        #3 to 7 are reserved (what does reserved means?)
+        if( resistance < 0 or resistance > 2 ):
+            raise ValueError('The resistance is defined between 0 and 2', resistance)
         self.send_packet( 0x15, bytearray(resistance))
 
 
@@ -57,6 +61,8 @@ class controllingChargebyteBoard:
         #1 lock the socket
         #2 request status
         #3 to 255 reserved
+        if( command < 0 or command > 2 ):
+            raise ValueError('Command must be 0, 1 or 2', command)
         self.send_packet( 0x18, bytearray(command) )
 
 
@@ -82,7 +88,9 @@ class controllingChargebyteBoard:
 
 
     def activate_proximity_pilot_resistor( self, control:int ):
-        self.send_packet( 0x50, bytearray(control))
+        if( control < 0 or control > 7 ):
+            raise ValueError('Control must be between 0 and 7')
+        self.send_packet( 0x50, bytearray([control]))
 
 
     def enable_pullup_resistor( self ):
@@ -92,6 +100,10 @@ class controllingChargebyteBoard:
 
     def disable_the_pullup_resistor( self ):
         self.send_packet( 0x51, bytearray([0]))
+
+
+
+
 
 
 
