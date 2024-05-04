@@ -3,8 +3,6 @@ import socket
 
 
 class controllingChargebyteBoard:
-
-
     def __init__( self, host: str, port: int ):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
@@ -14,16 +12,21 @@ class controllingChargebyteBoard:
         self.s.send(bytearray([service_id] + payload))
 
 
+    def test_devices( self ):
+        self.send_packet( 0x01, bytearray() )
+        self.send_packet( 0x04, bytearray() )
+
+
+    def get_pwm( self ):
+        self.send_packet( 0x10, bytearray() )
+
+
     def set_pwm( self, frequency: int, dutycycle: int ):
         low_freq = ( frequency & 0xff )
         high_freq = ( frequency >> 8 ) & 0xff
         low_duty = ( dutycycle & 0xff )
         high_duty =  ( dutycycle >> 8 ) & 0xff
         self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
-
-
-    def get_pwm( self ):
-        self.send_packet( 0x10, bytearray() )
 
 
     def control_pwm( self, control_code: int ):

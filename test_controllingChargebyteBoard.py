@@ -1,7 +1,14 @@
 from controllingChargebyteBoard import *
+import socket
 
+#@pytest.fixture
 
 class Test:
+    s = socket.socket()
+    host = socket.gethostname()
+    port = 8080
+    s.bind((host, port))
+    control = controllingChargebyteBoard(host, port)
 
     def test_device_one(self):
         pass
@@ -10,7 +17,8 @@ class Test:
         pass
 
     def test_set_pwm(self):
-        pass
+        s.listen(5)
+        c,addr = s.accept()
 
     def test_get_pwm(self):
         pass
