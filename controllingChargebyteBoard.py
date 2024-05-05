@@ -1,6 +1,7 @@
 import socket
 from enum import Enum
 
+
 class SerialSetting(Enum):
     BAUD_RATE = 57600
     DATA_BITS = 8
@@ -28,16 +29,10 @@ class ResetReason(Enum):
     UNKNOWN_70 = 70
 
 
-class ControlCode(Enum):
+class ControlPWM(Enum):
     DISABLE_PWM = 0
     ENABLE_PWM = 1
     QUERY_PWM_STATUS = 2
-
-
-class ControlDescription(Enum):
-    DISABLE_PWM_DESC = "disable PWM generation"
-    ENABLE_PWM_DESC = "enable PWM generation"
-    QUERY_PWM_STATUS_DESC = "query PWM generation status"
 
 
 class SocketAction(Enum):
@@ -47,10 +42,15 @@ class SocketAction(Enum):
     RESERVED = 3  # Reserved values from 3 to 255
 
 
-class ConnectionState(Enum):
+class LockStatus(Enum):
     OPEN = 0
     CLOSED = 1
     NOT_CONNECTED = 2
+
+
+class ErrorCode(Enum):
+    NO_ERROR = 0
+    INVALID_PARAMETER = 1
 
 
 class controllingChargebyteBoard:
