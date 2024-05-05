@@ -1,4 +1,56 @@
 import socket
+from enum import Enum
+
+class SerialSetting(Enum):
+    BAUD_RATE = 57600
+    DATA_BITS = 8
+    STOP_BITS = 1
+    PARITY = "None"
+    FLOW_CONTROL = "None"
+
+
+class ResetType(Enum):
+    POWER_ON_RESET = 0
+    EXTERNAL_RESET = 1
+    BROWN_OUT_RESET = 2
+    WATCHDOG_RESET = 3
+    JTAG_RESET = 4
+
+
+class ResetReason(Enum):
+    STOP_MODE_ERROR = 0
+    CORE_LOCKUP = 1
+    SOFTWARE_RESET = 2
+    CLOCK_LOSS_RESET = 3
+    WAKEUP_RESET = 4
+    UNKNOWN_50 = 50
+    UNKNOWN_60 = 60
+    UNKNOWN_70 = 70
+
+
+class ControlCode(Enum):
+    DISABLE_PWM = 0
+    ENABLE_PWM = 1
+    QUERY_PWM_STATUS = 2
+
+
+class ControlDescription(Enum):
+    DISABLE_PWM_DESC = "disable PWM generation"
+    ENABLE_PWM_DESC = "enable PWM generation"
+    QUERY_PWM_STATUS_DESC = "query PWM generation status"
+
+
+class SocketAction(Enum):
+    UNLOCK_SOCKET = 0
+    LOCK_SOCKET = 1
+    QUERY_LIMIT_SWITCH_STATUS = 2
+    RESERVED = 3  # Reserved values from 3 to 255
+
+
+class ConnectionState(Enum):
+    OPEN = 0
+    CLOSED = 1
+    NOT_CONNECTED = 2
 
 
 class controllingChargebyteBoard:
