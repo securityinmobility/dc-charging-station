@@ -35,6 +35,11 @@ class ControlPWM(Enum):
     QUERY_PWM_STATUS = 2
 
 
+class StatusPWMGeneration(Enum):
+    PWM_GENERATION_IS_DISABLED = 0
+    PWM_GENERATION_IS_ENABLED = 1
+
+
 class SocketAction(Enum):
     UNLOCK_SOCKET = 0
     LOCK_SOCKET = 1
@@ -53,12 +58,17 @@ class ErrorCode(Enum):
     INVALID_PARAMETER = 1
 
 
+class StatusCyclicMessage(Enum):
+    OFF = 0
+    ACTIVE = 1
+
+
 class controllingChargebyteBoard:
 
     def __init__( self, host: str, port: int ):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
-        self.s.settimeout(60.0 * 5.0)
+        self.s.settimeout(15.0)
 
 
     def read_response( self ) -> bytearray:
@@ -77,6 +87,8 @@ class controllingChargebyteBoard:
 
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
+    #TODO: have a function to read the cyclic message from device to host
+    #TODO: we need to send function to device every few minutes using thread
 
     def check_response( self, service_id:int, response:bytearray )->bool:
         if( response[0] != 0x02 ):
@@ -95,15 +107,34 @@ class controllingChargebyteBoard:
         return low_byte + 100*high_byte
 
 
-    def extract_payload_from_response( self, service_id:int, response:bytearray ):
+    def get_bit_position( self ):
+        pass
+
+
+    def parse_response( self, service_id:int, response:bytearray ):
         response = response[4:-1]
-        if( service_id == 0x04 ):
-            return join_bytes(response[0],response[1]), response[2]
-        if( service_id == 0x10 ):
+        if( service_id == 0x01 ):
+            return response[0], response[1], ResetType(response[-1])
+        elif( service_id == 0x04 ):
+            return join_bytes(response[0],response[1]), ResetType(response[2])
+        elif( service_id == 0x10 ):
             return join_bytes(response[0],response[1]),join_bytes(response[2], response[3])
-        if( service_id == 0x14 ):
+        elif( service_id == 0x11 ):
+            return ControlPWM( response[0] )
+        elif( service_id == 0x12 ):
+            return StatusPWMGeneration( response[0] )
+        elif( service_id == 0x14 ):
             return join_bytes(response[0], response[1]), join_bytes(response[2],response[3])
-        if( service_id == 0x52 ):
+        elif( service_id == 0x17 or service_id == 0x18 ):
+            return LockStatus( response[0] )
+        elif( service_id == 0x1A ):
+            #TODO : fix case if i get other numbers that are not 0 and not one
+            #The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
+        elif( service_id == 0x20 ):
+            return StatusCyclicMessage(response([0]))
+        elif( service_id == 0x31 or service_id == 0x50 ):
+            return ErrorCode(response[0])
+        elif( service_id == 0x52 ):
             return join_bytes(response[0], response[1])
         else:
             return response
@@ -114,7 +145,7 @@ class controllingChargebyteBoard:
         response = self.read_response( service_id )
         if( !check_response( service_id, response ) ):
             raise Exception
-        return self.extract_payload_from_response( service_id, response )
+        return self.parse_response( service_id, response )
 
 
     def test_device_one( self ):
