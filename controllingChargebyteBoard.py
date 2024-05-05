@@ -14,7 +14,7 @@ class controllingChargebyteBoard:
         length = s.recv(1) # read the length of the message
         data = s.recv( (int)length )
 
-        return data
+        return beginning + length + data
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
@@ -24,6 +24,7 @@ class controllingChargebyteBoard:
         block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ payload
 
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
+
 
     def decode_response( self, service_id:int, response:bytearray ):
         pass
