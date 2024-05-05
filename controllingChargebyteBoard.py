@@ -13,14 +13,17 @@ class controllingChargebyteBoard:
         pass
 
 
-    def send_packet( self, service_id: int, payload: bytearray ):
+    def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
         start_of_message = 0x02
         length_of_message = 3 + len(payload)
         device_adress = 0 #currently all the messages have the address 0
-        block_check_sum = start_of_message^length_of_message^device_adress^service_id^payload
-        self.s.send(bytearray([start_of_message,length_of_message,device_adress,service_id])+payload+bytearray([block_check_sum]))
+        block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ payload
+        return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
-        return self.read_response()
+
+    def send_packet( self, service_id: int, payload: bytearray ):
+        self.s.send( self.build_message(service_id, payload) )
+        return self.read_response( service_id )
         #try:
         #    self.read_response( service_id )
         #except Exception:
