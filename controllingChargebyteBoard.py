@@ -90,16 +90,16 @@ class controllingChargebyteBoard:
     #TODO: have a function to read the cyclic message from device to host
     #TODO: we need to send function to device every few minutes using thread
 
-    def check_response( self, service_id:int, response:bytearray )->bool:
+    def check_response( self, service_id:int, response:bytearray ):
         if( response[0] != 0x02 ):
-            return False
+            raise Exception('beginning of message was not 0x02')
         if( response[3] != service_id + 0x80 ):
-            return False
+            raise Exception('this response does not corresponds to the service that was requested')
         expected_check_sum = response[0]
         for byte in response[1:-1]:
             expected_check_sum = expected_check_sum ^ byte
         if( expected_check_sum != response[-1] ):
-            return False
+            raise Exception('Something wrong with the message: the check block is wrong!')
 
 
     def join_bytes( self, low_byte, high_byte ):
@@ -143,8 +143,7 @@ class controllingChargebyteBoard:
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
         response = self.read_response( service_id )
-        if( !check_response( service_id, response ) ):
-            raise Exception
+        check_response( service_id, response ) )
         return self.parse_response( service_id, response )
 
 
