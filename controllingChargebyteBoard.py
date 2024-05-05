@@ -52,8 +52,11 @@ class controllingChargebyteBoard:
         return self.extract_payload_from_response( service_id, response )
 
 
-    def test_devices( self ):
+    def test_device_one( self ):
         self.send_packet( 0x01, bytearray() )
+
+
+    def test_device_two( self ):
         self.send_packet( 0x04, bytearray() )
 
 
