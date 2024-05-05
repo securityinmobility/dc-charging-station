@@ -89,7 +89,7 @@ class controllingChargebyteBoard:
 
     #TODO: have a function to read the cyclic message from device to host
     #TODO: we need to send function to device every few minutes using thread
-
+    #TODO:check length: map the expected length to each service on a dictonary
     def check_response( self, service_id:int, response:bytearray ):
         if( response[0] != 0x02 ):
             raise Exception('beginning of message was not 0x02')
@@ -148,15 +148,15 @@ class controllingChargebyteBoard:
 
 
     def test_device_one( self ):
-        self.send_packet( 0x01, bytearray() )
+        return self.send_packet( 0x01, bytearray() )
 
 
     def test_device_two( self ):
-        self.send_packet( 0x04, bytearray() )
+        return self.send_packet( 0x04, bytearray() )
 
 
     def get_pwm( self ):
-        self.send_packet( 0x10, bytearray() )
+        return self.send_packet( 0x10, bytearray() )
 
 
     def set_pwm( self, frequency: int, dutycycle: int ):
@@ -164,20 +164,17 @@ class controllingChargebyteBoard:
         high_freq = ( frequency >> 8 ) & 0xff
         low_duty = ( dutycycle & 0xff )
         high_duty =  ( dutycycle >> 8 ) & 0xff
-        self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
+        return self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
 
 
     def control_pwm( self, control_code: int ):
-        # 0 = disable pwm
-        # 1 = enable pwm
-        # 2 = query pwm generation status
         if( control_code < 0 or control_code > 2 ):
             raise ValueError('The control code must be 0, 1 or 2', control_code )
-        self.send_packet( 0x12, bytearray( control_code ))
+        return self.send_packet( 0x12, bytearray( control_code ))
 
 
     def get_ucp( self ):
-        self.send_packet( 0x14, bytearray())
+        return self.send_packet( 0x14, bytearray())
 
 
     def set_ucp( self, resistance: int ):
@@ -187,65 +184,63 @@ class controllingChargebyteBoard:
         #3 to 7 are reserved (what does reserved means?)
         if( resistance < 0 or resistance > 2 ):
             raise ValueError('The resistance is defined between 0 and 2', resistance)
-        self.send_packet( 0x15, bytearray(resistance))
+        return self.send_packet( 0x15, bytearray(resistance))
 
 
     def lock_unlock_cable_one( self, command:int ):
-        self.send_packet( 0x17, bytearray(command) )
+        if( command < 0 or command > 2 ):
+            raise ValueError('Command must be 0, 1 or 2', command)
+        return self.send_packet( 0x17, bytearray(command) )
 
 
     def lock_unlock_cable_two( self, command:int ):
-        #0 unlock the socket
-        #1 lock the socket
-        #2 request status
-        #3 to 255 reserved
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
-        self.send_packet( 0x18, bytearray(command) )
+        return self.send_packet( 0x18, bytearray(command) )
 
 
     def get_motor_fault_pin( self ):
-        self.send_packet( 0x1A, bytearray() )
+        return self.send_packet( 0x1A, bytearray() )
 
 
     def set_cyclic_process_data( self, interval:int ):
-        self.send_packet( 0x20, bytearray(interval) )
+        return self.send_packet( 0x20, bytearray(interval) )
 
 
     def cyclic_process_data( self, interval:int ):
-        self.send_packet( 0xC0, bytearray(interval) )
+        return self.send_packet( 0xC0, bytearray(interval) )
 
 
     def push_button_simple_connect( self, parameter:int ):
-        self.send_packet( 0x31, bytearray(parameter) )
+        return self.send_packet( 0x31, bytearray(parameter) )
 
 
     #execute software reset on device
     def reset( self ):
-        self.send_packet( 0x33, bytearray())
+        return self.send_packet( 0x33, bytearray())
 
 
     def x_is_sent_by_device_after_reset( self ):
-        self.send_packet( 0xB3, bytearray())
+        return self.send_packet( 0xB3, bytearray())
 
 
     def activate_proximity_pilot_resistor( self, control:int ):
         if( control < 0 or control > 7 ):
             raise ValueError('Control must be between 0 and 7')
-        self.send_packet( 0x50, bytearray([control]))
+        return self.send_packet( 0x50, bytearray([control]))
 
 
     def enable_pullup_resistor( self ):
         #Control=0 deactivates the pullup, all other values activate the pullup
-        self.send_packet( 0x51, bytearray([3]) )
+        return self.send_packet( 0x51, bytearray([3]) )
 
 
     def disable_the_pullup_resistor( self ):
-        self.send_packet( 0x51, bytearray([0]))
+        return self.send_packet( 0x51, bytearray([0]))
 
 
     def get_voltage_of_proximity_signal( self ):
-        self.send_packet( 0x52, bytearray([0]) )
+        return self.send_packet( 0x52, bytearray([0]) )
 
 
 
