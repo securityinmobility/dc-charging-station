@@ -6,10 +6,25 @@ class controllingChargebyteBoard:
     def __init__( self, host: str, port: int ):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
+        self.s.settimeout(60.0 * 5.0)
+
+
+    def read_response( self, service_id ):
+        pass
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
-        self.s.send( bytearray([service_id] + payload) )
+        start_of_message = 0x02
+        length_of_message = 3 + len(payload)
+        device_adress = 0 #currently all the messages have the address 0
+        block_check_sum = start_of_message^length_of_message^device_adress^service_id^payload
+        self.s.send(bytearray([start_of_message,length_of_message,device_adress,service_id])+payload+bytearray([block_check_sum]))
+
+        return self.read_response()
+        #try:
+        #    self.read_response( service_id )
+        #except Exception:
+        #    return
 
 
     def test_devices( self ):
@@ -74,6 +89,10 @@ class controllingChargebyteBoard:
         self.send_packet( 0x20, bytearray(interval) )
 
 
+    def cyclic_process_data( self, interval:int ):
+        self.send_packet( 0xC0, bytearray(interval) )
+
+
     def push_button_simple_connect( self, parameter:int ):
         self.send_packet( 0x31, bytearray(parameter) )
 
@@ -84,7 +103,7 @@ class controllingChargebyteBoard:
 
 
     def x_is_sent_by_device_after_reset( self ):
-        self.send_packet( 0x12, bytearray())
+        self.send_packet( 0xB3, bytearray())
 
 
     def activate_proximity_pilot_resistor( self, control:int ):
@@ -102,7 +121,8 @@ class controllingChargebyteBoard:
         self.send_packet( 0x51, bytearray([0]))
 
 
-
+    def get_voltage_of_proximity_signal( self ):
+        self.send_packet( 0x52, bytearray([0]) )
 
 
 
