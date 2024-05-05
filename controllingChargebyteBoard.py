@@ -9,8 +9,12 @@ class controllingChargebyteBoard:
         self.s.settimeout(60.0 * 5.0)
 
 
-    def read_response( self, service_id ):
-        pass
+    def read_response( self ) -> bytearray:
+        beginning = s.recv(1) # read the message beginning
+        length = s.recv(1) # read the length of the message
+        data = s.recv( (int)length )
+
+        return data
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
@@ -18,12 +22,16 @@ class controllingChargebyteBoard:
         length_of_message = 3 + len(payload)
         device_adress = 0 #currently all the messages have the address 0
         block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ payload
+
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
+
+    def decode_response( self, service_id:int, response:bytearray ):
+        pass
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
-        return self.read_response( service_id )
+        self.read_response( service_id )
         #try:
         #    self.read_response( service_id )
         #except Exception:
