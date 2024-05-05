@@ -26,17 +26,30 @@ class controllingChargebyteBoard:
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
 
-    def decode_response( self, service_id:int, response:bytearray ):
-        pass
+    def check_response( self, service_id:int, response:bytearray )->bool:
+        if( response[0] != 0x02 ):
+            return False
+        if( response[3] != service_id + 0x80 ):
+            return False
+        expected_check_sum = response[0]
+        for byte in response[1:-1]:
+            expected_check_sum = expected_check_sum ^ byte
+        if( expected_check_sum != response[-1] ):
+            return False
+
+
+    def extract_payload_from_response( self, service_id:int, response:bytearray ):
+        payload = response[4:-1]
+        if( service_id == 0x01 ):
+            pass
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
-        self.read_response( service_id )
-        #try:
-        #    self.read_response( service_id )
-        #except Exception:
-        #    return
+        response = self.read_response( service_id )
+        if( !check_response( service_id, response ) ):
+            raise Exception
+        return self.extract_payload_from_response( service_id, response )
 
 
     def test_devices( self ):
