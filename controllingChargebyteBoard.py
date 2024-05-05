@@ -38,10 +38,23 @@ class controllingChargebyteBoard:
             return False
 
 
+    def join_bytes( self, low_byte, high_byte ):
+
+        return low_byte + 100*high_byte
+
+
     def extract_payload_from_response( self, service_id:int, response:bytearray ):
-        payload = response[4:-1]
-        if( service_id == 0x01 ):
-            pass
+        response = response[4:-1]
+        if( service_id == 0x04 ):
+            return join_bytes(response[0],response[1]), response[2]
+        if( service_id == 0x10 ):
+            return join_bytes(response[0],response[1]),join_bytes(response[2], response[3])
+        if( service_id == 0x14 ):
+            return join_bytes(response[0], response[1]), join_bytes(response[2],response[3])
+        if( service_id == 0x52 ):
+            return join_bytes(response[0], response[1])
+        else:
+            return response
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
