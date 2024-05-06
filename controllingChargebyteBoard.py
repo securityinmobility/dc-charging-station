@@ -76,7 +76,7 @@ class controllingChargebyteBoard:
         length = s.recv(1) # read the length of the message
         data = s.recv( (int)length )
 
-        return beginning + length + data
+        return bytearray([beginning,length])+data
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
