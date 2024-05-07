@@ -24,9 +24,6 @@ class ResetReason(Enum):
     SOFTWARE_RESET = 2
     CLOCK_LOSS_RESET = 3
     WAKEUP_RESET = 4
-    UNKNOWN_50 = 50
-    UNKNOWN_60 = 60
-    UNKNOWN_70 = 70
 
 
 class ControlPWM(Enum):
@@ -58,7 +55,7 @@ class ErrorCode(Enum):
     INVALID_PARAMETER = 1
 
 
-class StatusCyclicMessage(Enum):
+class StatusCode(Enum):
     OFF = 0
     ACTIVE = 1
 
@@ -87,6 +84,7 @@ class controllingChargebyteBoard:
 
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
+
     #TODO: have a function to read the cyclic message from device to host
     #TODO: we need to send function to device every few minutes using thread
     #TODO:check length: map the expected length to each service on a dictonary
@@ -113,31 +111,7 @@ class controllingChargebyteBoard:
 
     def parse_response( self, service_id:int, response:bytearray ):
         response = response[4:-1]
-        if( service_id == 0x01 ):
-            return response[0], response[1], ResetType(response[-1])
-        elif( service_id == 0x04 ):
-            return join_bytes(response[0],response[1]), ResetType(response[2])
-        elif( service_id == 0x10 ):
-            return join_bytes(response[0],response[1]),join_bytes(response[2], response[3])
-        elif( service_id == 0x11 ):
-            return ControlPWM( response[0] )
-        elif( service_id == 0x12 ):
-            return StatusPWMGeneration( response[0] )
-        elif( service_id == 0x14 ):
-            return join_bytes(response[0], response[1]), join_bytes(response[2],response[3])
-        elif( service_id == 0x17 or service_id == 0x18 ):
-            return LockStatus( response[0] )
-        elif( service_id == 0x1A ):
-            #TODO : fix case if i get other numbers that are not 0 and not one
-            #The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
-        elif( service_id == 0x20 ):
-            return StatusCyclicMessage(response([0]))
-        elif( service_id == 0x31 or service_id == 0x50 ):
-            return ErrorCode(response[0])
-        elif( service_id == 0x52 ):
-            return join_bytes(response[0], response[1])
-        else:
-            return response
+        return response
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
@@ -148,15 +122,28 @@ class controllingChargebyteBoard:
 
 
     def test_device_one( self ):
-        return self.send_packet( 0x01, bytearray() )
+        response = self.send_packet( 0x01, bytearray() )
+        software_version = response[0]
+        hardware_version = response[1]
+        last_reset_reason = ResetType(response[-1])
+
+        return software_version, hardware_version, last_reset_reason
 
 
     def test_device_two( self ):
-        return self.send_packet( 0x04, bytearray() )
+        response = self.send_packet( 0x04, bytearray() )
+        build = join_bytes(response[0],response[1])
+        last_reset_reason = ResetType(response[2])
+
+        return build, last_reset_reason
 
 
     def get_pwm( self ):
-        return self.send_packet( 0x10, bytearray() )
+        response = self.send_packet( 0x10, bytearray() )
+        frequency = join_bytes(response[0],response[1])
+        duty_cicle = join_bytes(response[2], response[3])
+
+        return frequency, duty_cicle
 
 
     def set_pwm( self, frequency: int, dutycycle: int ):
@@ -164,17 +151,25 @@ class controllingChargebyteBoard:
         high_freq = ( frequency >> 8 ) & 0xff
         low_duty = ( dutycycle & 0xff )
         high_duty =  ( dutycycle >> 8 ) & 0xff
-        return self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
+        response = self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
+
+        return ControlPWM( response[0] )
 
 
     def control_pwm( self, control_code: int ):
         if( control_code < 0 or control_code > 2 ):
             raise ValueError('The control code must be 0, 1 or 2', control_code )
-        return self.send_packet( 0x12, bytearray( control_code ))
+        response = self.send_packet( 0x12, bytearray( control_code ))
+
+        return StatusPWMGeneration( response[0] )
 
 
     def get_ucp( self ):
-        return self.send_packet( 0x14, bytearray())
+        response = self.send_packet( 0x14, bytearray())
+        positive_cp = join_bytes(response[0], response[1])
+        negative_cp = join_bytes(response[2],response[3])
+
+        return positive_cp, negative_cp
 
 
     def set_ucp( self, resistance: int ):
@@ -190,7 +185,8 @@ class controllingChargebyteBoard:
     def lock_unlock_cable_one( self, command:int ):
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
-        return self.send_packet( 0x17, bytearray(command) )
+        response = self.send_packet( 0x17, bytearray(command) )
+        return LockStatus( response[0] )
 
 
     def lock_unlock_cable_two( self, command:int ):
@@ -200,11 +196,15 @@ class controllingChargebyteBoard:
 
 
     def get_motor_fault_pin( self ):
-        return self.send_packet( 0x1A, bytearray() )
+        #TODO : fix case if i get other numbers that are not 0 and not 1
+        #The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
+        return StatusCode(self.send_packet(0x1A, bytearray()))
 
 
     def set_cyclic_process_data( self, interval:int ):
-        return self.send_packet( 0x20, bytearray(interval) )
+        response = self.send_packet( 0x20, bytearray(interval) )
+
+        return StatusCode(response([0]))
 
 
     def cyclic_process_data( self, interval:int ):
@@ -212,7 +212,9 @@ class controllingChargebyteBoard:
 
 
     def push_button_simple_connect( self, parameter:int ):
-        return self.send_packet( 0x31, bytearray(parameter) )
+        response = self.send_packet( 0x31, bytearray(parameter) )
+
+        return ErrorCode(response[0])
 
 
     #execute software reset on device
@@ -227,7 +229,8 @@ class controllingChargebyteBoard:
     def activate_proximity_pilot_resistor( self, control:int ):
         if( control < 0 or control > 7 ):
             raise ValueError('Control must be between 0 and 7')
-        return self.send_packet( 0x50, bytearray([control]))
+        response = self.send_packet( 0x50, bytearray([control]))
+        return ErrorCode(response[0])
 
 
     def enable_pullup_resistor( self ):
@@ -240,7 +243,10 @@ class controllingChargebyteBoard:
 
 
     def get_voltage_of_proximity_signal( self ):
-        return self.send_packet( 0x52, bytearray([0]) )
+        response = self.send_packet( 0x52, bytearray([0]) )
+        byte_voltage = join_bytes(response[0], response[1])
+
+        return byte_voltage
 
 
 
