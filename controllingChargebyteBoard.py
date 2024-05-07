@@ -71,7 +71,7 @@ class controllingChargebyteBoard:
     def read_response( self ) -> bytearray:
         beginning = s.recv(1) # read the message beginning
         length = s.recv(1) # read the length of the message
-        data = s.recv( (int)length )
+        data = s.recv( int(length) )
 
         return bytearray([beginning,length])+data
 
@@ -97,7 +97,7 @@ class controllingChargebyteBoard:
         for byte in response[1:-1]:
             expected_check_sum = expected_check_sum ^ byte
         if( expected_check_sum != response[-1] ):
-            raise Exception('Something wrong with the message: the check block is wrong!')
+            raise Exception('Something went wrong: the check block is wrong!')
 
 
     def join_bytes( self, low_byte, high_byte ):
@@ -117,7 +117,7 @@ class controllingChargebyteBoard:
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
         response = self.read_response( service_id )
-        check_response( service_id, response ) )
+        check_response( service_id, response )
         return self.parse_response( service_id, response )
 
 
