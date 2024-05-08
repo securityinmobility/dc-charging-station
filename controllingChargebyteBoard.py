@@ -66,9 +66,11 @@ class controllingChargebyteBoard:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
         self.s.settimeout(15.0)
+        self.s.setblocking(0)
 
 
     def read_response( self ) -> bytearray:
+        self.s.settimeout(5.0)
         beginning = s.recv(1) # read the message beginning
         length = s.recv(1) # read the length of the message
         data = s.recv( int(length) )
@@ -196,9 +198,11 @@ class controllingChargebyteBoard:
 
 
     def get_motor_fault_pin( self ):
-        #TODO : fix case if i get other numbers that are not 0 and not 1
-        #The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
-        return StatusCode(self.send_packet(0x1A, bytearray()))
+        answer = self.send_packet(0x1A, bytearray())[0]
+        if( answer != 0 and answer != 1 ):
+            answer = answer / answer
+
+        return StatusCode(answer)
 
 
     def set_cyclic_process_data( self, interval:int ):
@@ -208,6 +212,7 @@ class controllingChargebyteBoard:
 
 
     def cyclic_process_data( self, interval:int ):
+
         return self.send_packet( 0xC0, bytearray(interval) )
 
 
@@ -219,10 +224,12 @@ class controllingChargebyteBoard:
 
     #execute software reset on device
     def reset( self ):
+
         return self.send_packet( 0x33, bytearray())
 
 
     def x_is_sent_by_device_after_reset( self ):
+
         return self.send_packet( 0xB3, bytearray())
 
 
@@ -230,15 +237,18 @@ class controllingChargebyteBoard:
         if( control < 0 or control > 7 ):
             raise ValueError('Control must be between 0 and 7')
         response = self.send_packet( 0x50, bytearray([control]))
+
         return ErrorCode(response[0])
 
 
     def enable_pullup_resistor( self ):
         #Control=0 deactivates the pullup, all other values activate the pullup
+
         return self.send_packet( 0x51, bytearray([3]) )
 
 
     def disable_the_pullup_resistor( self ):
+
         return self.send_packet( 0x51, bytearray([0]))
 
 
