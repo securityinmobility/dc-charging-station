@@ -112,19 +112,22 @@ class controllingChargebyteBoard:
 
 
     def parse_response( self, service_id:int, response:bytearray ):
-        response = response[4:-1]
-        return response
+
+        return response[4:-1]
 
 
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
         response = self.read_response( service_id )
         check_response( service_id, response )
+
         return self.parse_response( service_id, response )
 
 
     def test_device_one( self ):
         response = self.send_packet( 0x01, bytearray() )
+        if(len(response) != 3):
+            raise Exception('Something went wrong, the response has an unexpected length!')
         software_version = response[0]
         hardware_version = response[1]
         last_reset_reason = ResetType(response[-1])
@@ -134,6 +137,8 @@ class controllingChargebyteBoard:
 
     def test_device_two( self ):
         response = self.send_packet( 0x04, bytearray() )
+        if(len(response) != 3):
+            raise Exception('Something went wrong, the response has an unexpected length!')
         build = join_bytes(response[0],response[1])
         last_reset_reason = ResetType(response[2])
 
@@ -142,6 +147,8 @@ class controllingChargebyteBoard:
 
     def get_pwm( self ):
         response = self.send_packet( 0x10, bytearray() )
+        if(len(response) != 4):
+            raise Exception('Something went wrong, the response has an unexpected length!')
         frequency = join_bytes(response[0],response[1])
         duty_cicle = join_bytes(response[2], response[3])
 
@@ -168,6 +175,8 @@ class controllingChargebyteBoard:
 
     def get_ucp( self ):
         response = self.send_packet( 0x14, bytearray())
+        if(len(response) != 4):
+            raise Exception('Something went wrong, the response has an unexpected length!')
         positive_cp = join_bytes(response[0], response[1])
         negative_cp = join_bytes(response[2],response[3])
 
@@ -181,6 +190,7 @@ class controllingChargebyteBoard:
         #3 to 7 are reserved (what does reserved means?)
         if( resistance < 0 or resistance > 2 ):
             raise ValueError('The resistance is defined between 0 and 2', resistance)
+
         return self.send_packet( 0x15, bytearray(resistance))
 
 
@@ -254,6 +264,8 @@ class controllingChargebyteBoard:
 
     def get_voltage_of_proximity_signal( self ):
         response = self.send_packet( 0x52, bytearray([0]) )
+        if(len(response) != 2):
+            raise Exception('Something went wrong, the response has an unexpected length!')
         byte_voltage = join_bytes(response[0], response[1])
 
         return byte_voltage
