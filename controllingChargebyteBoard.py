@@ -70,19 +70,24 @@ class controllingChargebyteBoard:
 
 
     def read_response( self ) -> bytearray:
-        self.s.settimeout(5.0)
-        beginning = s.recv(1) # read the message beginning
-        length = s.recv(1) # read the length of the message
-        data = s.recv( int(length) )
+        #self.s.settimeout(5.0)
+        beginning = self.s.recv(1) # read the message beginning
+        length = self.s.recv(1) # read the length of the message
+        data = self.s.recv( int(length) )
 
         return bytearray([beginning,length])+data
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
+        if( type(service_id) is not int ):
+            raise Exception('type error')
         start_of_message = 0x02
         length_of_message = 3 + len(payload)
         device_adress = 0 #currently all the messages have the address 0
-        block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ payload
+        if( len(payload) is 0 ):
+            block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id
+        else:
+            block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ int(payload)
 
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
@@ -118,8 +123,8 @@ class controllingChargebyteBoard:
 
     def send_packet( self, service_id: int, payload: bytearray ):
         self.s.send( self.build_message(service_id, payload) )
-        response = self.read_response( service_id )
-        check_response( service_id, response )
+        response = self.read_response( )
+        self.check_response( service_id, response )
 
         return self.parse_response( service_id, response )
 
@@ -198,6 +203,7 @@ class controllingChargebyteBoard:
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet( 0x17, bytearray(command) )
+
         return LockStatus( response[0] )
 
 
