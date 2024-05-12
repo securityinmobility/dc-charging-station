@@ -91,7 +91,7 @@ class controllingChargebyteBoard:
     #TODO: have a function to read the cyclic message from device to host
     #TODO: we need to send function to device every few minutes using thread
     #TODO:check length: map the expected length to each service on a dictonary
-    def check_response( self, service_id:int, response:bytearray ):
+    def check_response( self, service_id:int, response:bytearray ) -> None:
         if( response[0] != 0x02 ):
             raise Exception('beginning of message was not 0x02')
         if( response[3] != service_id + 0x80 ):
@@ -103,7 +103,7 @@ class controllingChargebyteBoard:
         #    raise Exception('Something went wrong: the check block is wrong!')
 
 
-    def join_bytes( self, low_byte, high_byte ):
+    def join_bytes( self, low_byte:int, high_byte:int ) -> int:
         return low_byte + 100*high_byte
 
 
@@ -111,11 +111,11 @@ class controllingChargebyteBoard:
         pass
 
 
-    def parse_response( self, service_id:int, response:bytearray ):
+    def parse_response( self, service_id:int, response:bytearray )-> bytearray:
         return response[4:-1]
 
 
-    def send_packet( self, service_id: int, payload: bytearray ):
+    def send_packet( self, service_id: int, payload: bytearray ) -> bytearray:
         self.s.send( self.build_message(service_id, payload) )
         response = self.read_response( )
         self.check_response( service_id, response )
@@ -150,7 +150,7 @@ class controllingChargebyteBoard:
         return frequency, duty_cicle
 
 
-    def set_pwm( self, frequency: int, dutycycle: int ):
+    def set_pwm( self, frequency: int, dutycycle: int )->Enum:
         low_freq = ( frequency & 0xff )
         high_freq = ( frequency >> 8 ) & 0xff
         low_duty = ( dutycycle & 0xff )
@@ -159,7 +159,7 @@ class controllingChargebyteBoard:
         return ControlPWM( response[0] )
 
 
-    def control_pwm( self, control_code: int ):
+    def control_pwm( self, control_code: int ) -> Enum:
         if( control_code < 0 or control_code > 2 ):
             raise ValueError('The control code must be 0, 1 or 2', control_code )
         response = self.send_packet( 0x12, bytearray([control_code]))
@@ -176,19 +176,13 @@ class controllingChargebyteBoard:
         return positive_cp, negative_cp
 
 
-    def set_ucp( self, resistance: int ):
-        #0 = 2.7 
-        #1 = 1.3
-        #2 = 347
-        #3 to 7 are reserved (what does reserved means?)
+    def set_ucp( self, resistance: int ) -> int:
         if( resistance < 0 or resistance > 2 ):
             raise ValueError('The resistance is defined between 0 and 2', resistance)
-
-        answer = self.send_packet( 0x15, bytearray(resistance))
+        answer = self.send_packet(0x15, bytearray([resistance]))
         if(len(answer) != 1):
             raise Exception('Wrong length! something went wrong!')
-        else:
-            return answer
+        return int(answer[0])
 
 
     def lock_unlock_cable_one( self, command:int ):
