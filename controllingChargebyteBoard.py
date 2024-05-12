@@ -84,11 +84,7 @@ class controllingChargebyteBoard:
         start_of_message = 0x02
         length_of_message = 3 + len(payload)
         device_adress = 0 #currently all the messages have the address 0
-        #if( len(payload) == 0 ):
         block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id
-        #else:
-        #    block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id ^ payload
-
         return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
 
 
@@ -108,7 +104,6 @@ class controllingChargebyteBoard:
 
 
     def join_bytes( self, low_byte, high_byte ):
-
         return low_byte + 100*high_byte
 
 
@@ -117,7 +112,6 @@ class controllingChargebyteBoard:
 
 
     def parse_response( self, service_id:int, response:bytearray ):
-
         return response[4:-1]
 
 
@@ -144,7 +138,6 @@ class controllingChargebyteBoard:
             raise Exception('Something went wrong, the response has an unexpected length!')
         build = self.join_bytes(response[0],response[1])
         last_reset_reason = ResetType(response[2])
-
         return build, last_reset_reason
 
 
@@ -152,9 +145,8 @@ class controllingChargebyteBoard:
         response = self.send_packet( 0x10, bytearray() )
         if(len(response) != 4):
             raise Exception('Something went wrong, the response has an unexpected length!')
-        frequency = self.joing_bytes(response[0],response[1])
-        duty_cicle = self.joing_bytes(response[2], response[3])
-
+        frequency = self.join_bytes(response[0],response[1])
+        duty_cicle = self.join_bytes(response[2], response[3])
         return frequency, duty_cicle
 
 
@@ -164,15 +156,13 @@ class controllingChargebyteBoard:
         low_duty = ( dutycycle & 0xff )
         high_duty =  ( dutycycle >> 8 ) & 0xff
         response = self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
-
         return ControlPWM( response[0] )
 
 
     def control_pwm( self, control_code: int ):
         if( control_code < 0 or control_code > 2 ):
             raise ValueError('The control code must be 0, 1 or 2', control_code )
-        response = self.send_packet( 0x12, bytearray( control_code ))
-
+        response = self.send_packet( 0x12, bytearray([control_code]))
         return StatusPWMGeneration( response[0] )
 
 
@@ -180,8 +170,8 @@ class controllingChargebyteBoard:
         response = self.send_packet( 0x14, bytearray())
         if(len(response) != 4):
             raise Exception('Something went wrong, the response has an unexpected length!')
-        positive_cp = self.joing_bytes(response[0], response[1])
-        negative_cp = self.joing_bytes(response[2],response[3])
+        positive_cp = self.join_bytes(response[0], response[1])
+        negative_cp = self.join_bytes(response[2],response[3])
 
         return positive_cp, negative_cp
 
@@ -274,7 +264,7 @@ class controllingChargebyteBoard:
         response = self.send_packet( 0x52, bytearray([0]) )
         if(len(response) != 2):
             raise Exception('Something went wrong, the response has an unexpected length!')
-        byte_voltage = self.joing_bytes(response[0], response[1])
+        byte_voltage = self.join_bytes(response[0], response[1])
 
         return byte_voltage
 
