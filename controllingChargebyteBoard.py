@@ -70,9 +70,8 @@ class controllingChargebyteBoard:
 
 
     def read_response( self ) -> bytearray:
-        #self.s.settimeout(5.0)
-        beginning = self.s.recv(1) # read the message beginning
-        length = self.s.recv(1) # read the length of the message
+        beginning = self.s.recv(1)
+        length = self.s.recv(1)
         data = self.s.recv( int(length) )
         return bytearray([beginning,length])+data
 
@@ -89,9 +88,9 @@ class controllingChargebyteBoard:
             raise Exception('type error')
         start_of_message = 0x02
         length_of_message = 3 + len(payload)
-        device_adress = 0 #currently all the messages have the address 0
-        block_check_sum = start_of_message ^ length_of_message ^ device_adress ^ service_id
-        return bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload + bytearray([block_check_sum])
+        device_adress = 0x00
+        block_check_sum = self.xor_calculator(bytearray([start_of_message,length_of_message,device_adress,service_id])+payload)
+        return bytearray([start_of_message,length_of_message,device_adress,service_id])+payload+bytearray([block_check_sum])
 
 
     #TODO: have a function to read the cyclic message from device to host
@@ -101,12 +100,12 @@ class controllingChargebyteBoard:
         if( response[0] != 0x02 ):
             raise Exception('beginning of message was not 0x02')
         if( response[3] != service_id + 0x80 ):
-            raise Exception('this response does not corresponds to the service that was requested')
+            raise Exception('this response does not corresponds to the service that was requested, service id: %d,answer id: %d'%(service_id,response[3]))
         expected_check_sum = response[0]
         for byte in response[1:-1]:
             expected_check_sum = expected_check_sum ^ byte
-        #if( expected_check_sum != response[-1] ):
-        #    raise Exception('Something went wrong: the check block is wrong!')
+        if( expected_check_sum != response[-1] ):
+            raise Exception('Something went wrong: the check block is wrong!')
 
 
     def join_bytes( self, low_byte:int, high_byte:int ) -> int:
