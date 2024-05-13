@@ -69,18 +69,11 @@ class controllingChargebyteBoard:
         self.s.setblocking(0)
 
 
-    def read_response( self ) -> bytearray:
-        beginning = self.s.recv(1)
-        length = self.s.recv(1)
-        data = self.s.recv( int(length) )
-        return bytearray([beginning,length])+data
-
-
-    def xor_calculator( self, numbers:bytearray ) -> int:
-        answer = numbers[0]
-        for num in numbers[1:] :
-            answer = answer ^ num
-        return answer
+    def send_packet( self, service_id: int, payload: bytearray ) -> bytearray:
+        self.s.send( self.build_message(service_id, payload) )
+        response = self.read_response( )
+        self.check_response( service_id, response )
+        return self.parse_response( service_id, response )
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
@@ -94,9 +87,13 @@ class controllingChargebyteBoard:
         return response+bytearray([block_check_sum])
 
 
-    #TODO: have a function to read the cyclic message from device to host
-    #TODO: we need to send function to device every few minutes using thread
-    #TODO:check length: map the expected length to each service on a dictonary
+    def read_response( self ) -> bytearray:
+        beginning = self.s.recv(1)
+        length = self.s.recv(1)
+        data = self.s.recv( int(length) )
+        return bytearray([beginning,length])+data
+
+
     def check_response( self, service_id:int, response:bytearray ) -> None:
         if( response[0] != 0x02 ):
             raise Exception('beginning of message was not 0x02')
@@ -109,23 +106,19 @@ class controllingChargebyteBoard:
             raise Exception('Something went wrong: the check block is wrong!')
 
 
-    def join_bytes( self, low_byte:int, high_byte:int ) -> int:
-        return low_byte + 100*high_byte
-
-
-    def get_bit_position( self ):
-        pass
-
-
     def parse_response( self, service_id:int, response:bytearray )-> bytearray:
         return response[4:-1]
 
 
-    def send_packet( self, service_id: int, payload: bytearray ) -> bytearray:
-        self.s.send( self.build_message(service_id, payload) )
-        response = self.read_response( )
-        self.check_response( service_id, response )
-        return self.parse_response( service_id, response )
+    def xor_calculator( self, numbers:bytearray ) -> int:
+        answer = numbers[0]
+        for num in numbers[1:] :
+            answer = answer ^ num
+        return answer
+
+
+    def join_bytes( self, low_byte:int, high_byte:int ) -> int:
+        return low_byte + 100*high_byte
 
 
     def test_device_one( self ):
@@ -179,6 +172,10 @@ class controllingChargebyteBoard:
         positive_cp = self.join_bytes(response[0], response[1])
         negative_cp = self.join_bytes(response[2],response[3])
         return positive_cp, negative_cp
+
+
+    def get_bit_position( self ):
+        pass
 
 
     def set_ucp( self, resistance: int ) -> int:
