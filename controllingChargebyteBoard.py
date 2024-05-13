@@ -87,10 +87,11 @@ class controllingChargebyteBoard:
         if( type(service_id) is not int ):
             raise Exception('type error')
         start_of_message = 0x02
-        length_of_message = 3 + len(payload)
+        length_of_message = 0x03 + len(payload)
         device_adress = 0x00
-        block_check_sum = self.xor_calculator(bytearray([start_of_message,length_of_message,device_adress,service_id])+payload)
-        return bytearray([start_of_message,length_of_message,device_adress,service_id])+payload+bytearray([block_check_sum])
+        response = bytearray([start_of_message,length_of_message,device_adress,service_id])+payload
+        block_check_sum = self.xor_calculator(response)
+        return response+bytearray([block_check_sum])
 
 
     #TODO: have a function to read the cyclic message from device to host
@@ -100,7 +101,7 @@ class controllingChargebyteBoard:
         if( response[0] != 0x02 ):
             raise Exception('beginning of message was not 0x02')
         if( response[3] != service_id + 0x80 ):
-            raise Exception('this response does not corresponds to the service that was requested, service id: %d,answer id: %d'%(service_id,response[3]))
+            raise Exception('this response does not corresponds to the service that was requested')
         expected_check_sum = response[0]
         for byte in response[1:-1]:
             expected_check_sum = expected_check_sum ^ byte
@@ -239,15 +240,15 @@ class controllingChargebyteBoard:
 
     def enable_pullup_resistor( self ):
         #Control=0 deactivates the pullup, all other values activate the pullup
-        return self.send_packet(0x51, bytearray([3]))[0]
+        return self.send_packet(0x51, bytearray([0x03]))[0]
 
 
     def disable_pullup_resistor( self ):
-        return self.send_packet(0x51, bytearray([0]))[0]
+        return self.send_packet(0x51, bytearray([0x00]))[0]
 
 
     def get_voltage_of_proximity_signal( self ):
-        response = self.send_packet( 0x52, bytearray([0]) )
+        response = self.send_packet( 0x52, bytearray() )
         if(len(response) != 2):
             raise Exception('Something went wrong, the response has an unexpected length!')
         byte_voltage = self.join_bytes(response[0], response[1])
