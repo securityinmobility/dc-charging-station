@@ -62,8 +62,12 @@ class TestChargeboardByte:
 
 
     def test_incorrect_checksum(self,control,mock_socket):
-        #how to code a xor calculator on byteaddays?
-        pass
+        data = bytearray([0x02,0x06,0x00,0x81,0x81,0x81,0x02])
+        data.append(xor_calculator(data)+2) #check sum needs to be wrong
+        mock_socket.recv.side_effect = [data[0], data[1], data[2:]]
+        with pytest.raises(Exception) as info:
+            control.send_packet(0x01, bytearray())
+        assert info.value.args[0] == 'Something went wrong: the check block is wrong!'
 
 
     def test_should_start_with_answer_code(self,control,mock_socket):
