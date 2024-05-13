@@ -74,8 +74,14 @@ class controllingChargebyteBoard:
         beginning = self.s.recv(1) # read the message beginning
         length = self.s.recv(1) # read the length of the message
         data = self.s.recv( int(length) )
-
         return bytearray([beginning,length])+data
+
+
+    def xor_calculator( self, numbers:bytearray ) -> int:
+        answer = numbers[0]
+        for num in numbers[1:] :
+            answer = answer ^ num
+        return answer
 
 
     def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
@@ -167,12 +173,11 @@ class controllingChargebyteBoard:
 
 
     def get_ucp( self ):
-        response = self.send_packet( 0x14, bytearray())
+        response = self.send_packet(0x14, bytearray())
         if(len(response) != 4):
             raise Exception('Something went wrong, the response has an unexpected length!')
         positive_cp = self.join_bytes(response[0], response[1])
         negative_cp = self.join_bytes(response[2],response[3])
-
         return positive_cp, negative_cp
 
 
@@ -188,70 +193,58 @@ class controllingChargebyteBoard:
     def lock_unlock_cable_one( self, command:int ):
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
-        response = self.send_packet( 0x17, bytearray(command) )
-
+        response = self.send_packet( 0x17, bytearray([command]) )
         return LockStatus( response[0] )
 
 
     def lock_unlock_cable_two( self, command:int ):
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
-        return self.send_packet( 0x18, bytearray(command) )
+        response = self.send_packet( 0x18, bytearray([command]) )
+        return LockStatus( response[0] )
 
 
     def get_motor_fault_pin( self ):
         answer = self.send_packet(0x1A, bytearray())[0]
         if( answer != 0 and answer != 1 ):
             answer = answer / answer
-
         return StatusCode(answer)
 
 
     def set_cyclic_process_data( self, interval:int ):
-        response = self.send_packet( 0x20, bytearray(interval) )
-
-        return StatusCode(response([0]))
+        response = self.send_packet( 0x20, bytearray([interval]) )
+        return StatusCode(response[0])
 
 
     def cyclic_process_data( self, interval:int ):
-
-        return self.send_packet( 0xC0, bytearray(interval) )
+        #TODO: this one requires the use of threads to receive the data each time on the interval
+        return
 
 
     def push_button_simple_connect( self, parameter:int ):
-        response = self.send_packet( 0x31, bytearray(parameter) )
-
+        response = self.send_packet( 0x31, bytearray([parameter]) )
         return ErrorCode(response[0])
 
 
     #execute software reset on device
     def reset( self ):
-
         return self.send_packet( 0x33, bytearray())
-
-
-    def x_is_sent_by_device_after_reset( self ):
-
-        return self.send_packet( 0xB3, bytearray())
 
 
     def activate_proximity_pilot_resistor( self, control:int ):
         if( control < 0 or control > 7 ):
             raise ValueError('Control must be between 0 and 7')
         response = self.send_packet( 0x50, bytearray([control]))
-
         return ErrorCode(response[0])
 
 
     def enable_pullup_resistor( self ):
         #Control=0 deactivates the pullup, all other values activate the pullup
+        return self.send_packet(0x51, bytearray([3]))[0]
 
-        return self.send_packet( 0x51, bytearray([3]) )
 
-
-    def disable_the_pullup_resistor( self ):
-
-        return self.send_packet( 0x51, bytearray([0]))
+    def disable_pullup_resistor( self ):
+        return self.send_packet(0x51, bytearray([0]))[0]
 
 
     def get_voltage_of_proximity_signal( self ):
@@ -259,7 +252,6 @@ class controllingChargebyteBoard:
         if(len(response) != 2):
             raise Exception('Something went wrong, the response has an unexpected length!')
         byte_voltage = self.join_bytes(response[0], response[1])
-
         return byte_voltage
 
 
