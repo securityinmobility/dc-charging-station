@@ -33,10 +33,10 @@ def xor_calculator( parameter:list[int] ) -> int:
 
 class TestChargeboardByte:
 
-    def test_xor_calculator(self, control):
+    def test_check_block_sum(self, control):
         data = [0x10,0x00,0x01]
         expected = 0x11
-        assert control.xor_calculator(data) == expected
+        assert control.check_block_sum(data) == expected
 
 
     def test_should_check_length(self,control,mock_socket):

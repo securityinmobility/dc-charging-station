@@ -10,7 +10,7 @@ class SerialSetting(Enum):
     FLOW_CONTROL = "None"
 
 
-class ResetType(Enum):
+class ResetReason(Enum):
     POWER_ON_RESET = 0
     EXTERNAL_RESET = 1
     BROWN_OUT_RESET = 2
@@ -83,8 +83,7 @@ class controllingChargebyteBoard:
         length_of_message = 0x03 + len(payload)
         device_adress = 0x00
         response = bytearray([start_of_message,length_of_message,device_adress,service_id])+payload
-        block_check_sum = self.xor_calculator(response)
-        return response+bytearray([block_check_sum])
+        return response+bytearray([self.check_block_sum(response)])
 
 
     def read_response( self ) -> bytearray:
@@ -99,10 +98,7 @@ class controllingChargebyteBoard:
             raise Exception('beginning of message was not 0x02')
         if( response[3] != service_id + 0x80 ):
             raise Exception('this response does not corresponds to the service that was requested')
-        expected_check_sum = response[0]
-        for byte in response[1:-1]:
-            expected_check_sum = expected_check_sum ^ byte
-        if( expected_check_sum != response[-1] ):
+        if( self.check_block_sum(response[:-1]) != response[-1] ):
             raise Exception('Something went wrong: the check block is wrong!')
 
 
@@ -110,11 +106,11 @@ class controllingChargebyteBoard:
         return response[4:-1]
 
 
-    def xor_calculator( self, numbers:bytearray ) -> int:
-        answer = numbers[0]
+    def check_block_sum( self, numbers:bytearray ) -> int:
+        response = numbers[0]
         for num in numbers[1:] :
-            answer = answer ^ num
-        return answer
+            response = response ^ num
+        return response
 
 
     def join_bytes( self, low_byte:int, high_byte:int ) -> int:
@@ -127,7 +123,7 @@ class controllingChargebyteBoard:
             raise Exception('Something went wrong, the response has an unexpected length!')
         software_version = response[0]
         hardware_version = response[1]
-        last_reset_reason = ResetType(response[-1])
+        last_reset_reason = ResetReason(response[-1])
         return software_version, hardware_version, last_reset_reason
 
 
@@ -136,7 +132,7 @@ class controllingChargebyteBoard:
         if(len(response) != 3):
             raise Exception('Something went wrong, the response has an unexpected length!')
         build = self.join_bytes(response[0],response[1])
-        last_reset_reason = ResetType(response[2])
+        last_reset_reason = ResetReason(response[2])
         return build, last_reset_reason
 
 
@@ -155,12 +151,14 @@ class controllingChargebyteBoard:
         low_duty = ( dutycycle & 0xff )
         high_duty =  ( dutycycle >> 8 ) & 0xff
         response = self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
         return ControlPWM( response[0] )
 
 
     def control_pwm( self, control_code: int ) -> Enum:
         if( control_code < 0 or control_code > 2 ):
-            raise ValueError('The control code must be 0, 1 or 2', control_code )
+            raise ValueError('The control code must be 0, 1 or 2.', control_code )
         response = self.send_packet( 0x12, bytearray([control_code]))
         return StatusPWMGeneration( response[0] )
 
@@ -181,16 +179,18 @@ class controllingChargebyteBoard:
     def set_ucp( self, resistance: int ) -> int:
         if( resistance < 0 or resistance > 2 ):
             raise ValueError('The resistance is defined between 0 and 2', resistance)
-        answer = self.send_packet(0x15, bytearray([resistance]))
-        if(len(answer) != 1):
+        response = self.send_packet(0x15, bytearray([resistance]))
+        if(len(response) != 1):
             raise Exception('Wrong length! something went wrong!')
-        return int(answer[0])
+        return int(response[0])
 
 
     def lock_unlock_cable_one( self, command:int ):
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet( 0x17, bytearray([command]) )
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
         return LockStatus( response[0] )
 
 
@@ -198,18 +198,25 @@ class controllingChargebyteBoard:
         if( command < 0 or command > 2 ):
             raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet( 0x18, bytearray([command]) )
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
         return LockStatus( response[0] )
 
 
     def get_motor_fault_pin( self ):
-        answer = self.send_packet(0x1A, bytearray())[0]
-        if( answer != 0 and answer != 1 ):
-            answer = answer / answer
-        return StatusCode(answer)
+        response = self.send_packet(0x1A, bytearray())
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
+        response = response[0]
+        if( response != 0 ):
+            response = 1
+        return StatusCode(response)
 
 
     def set_cyclic_process_data( self, interval:int ):
         response = self.send_packet( 0x20, bytearray([interval]) )
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
         return StatusCode(response[0])
 
 
@@ -219,7 +226,9 @@ class controllingChargebyteBoard:
 
 
     def push_button_simple_connect( self, parameter:int ):
-        response = self.send_packet( 0x31, bytearray([parameter]) )
+        response = self.send_packet(0x31, bytearray([parameter]))
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
         return ErrorCode(response[0])
 
 
@@ -231,7 +240,7 @@ class controllingChargebyteBoard:
     def activate_proximity_pilot_resistor( self, control:int ):
         if( control < 0 or control > 7 ):
             raise ValueError('Control must be between 0 and 7')
-        response = self.send_packet( 0x50, bytearray([control]))
+        response = self.send_packet(0x50, bytearray([control]))
         return ErrorCode(response[0])
 
 
