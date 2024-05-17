@@ -226,6 +226,8 @@ class controllingChargebyteBoard:
 
 
     def push_button_simple_connect(self, parameter:int)->Enum:
+        if(parameter > 255 or parameter < 1):
+            raise ValueError('This parameter is defined between 1 and 255!')
         response = self.send_packet(0x31, bytearray([parameter]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
@@ -233,8 +235,11 @@ class controllingChargebyteBoard:
 
 
     #execute software reset on device
-    def reset(self):
-        return self.send_packet(0x33, bytearray())
+    def reset(self)->int:
+        response = self.send_packet(0x33, bytearray())
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
+        return response[0]
 
 
     def activate_proximity_pilot_resistor(self, control:int)->Enum:
@@ -246,11 +251,17 @@ class controllingChargebyteBoard:
 
     def enable_pullup_resistor(self)->int:
         #Control=0 deactivates the pullup, all other values activate the pullup
-        return self.send_packet(0x51, bytearray([0x03]))[0]
+        response = self.send_packet(0x51, bytearray([0x03]))
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
+        return response[0]
 
 
     def disable_pullup_resistor(self)->int:
-        return self.send_packet(0x51, bytearray([0x00]))[0]
+        response = self.send_packet(0x51, bytearray([0x00]))
+        if(len(response) != 1):
+            raise Exception('Something went wrong, unexpected length!')
+        return response[0]
 
 
     def get_voltage_of_proximity_signal(self)->int:
