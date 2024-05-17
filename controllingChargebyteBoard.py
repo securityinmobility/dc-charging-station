@@ -62,22 +62,22 @@ class StatusCode(Enum):
 
 class controllingChargebyteBoard:
 
-    def __init__( self, host: str, port: int ):
+    def __init__(self, host: str, port: int):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
         self.s.settimeout(15.0)
         self.s.setblocking(0)
 
 
-    def send_packet( self, service_id: int, payload: bytearray ) -> bytearray:
-        self.s.send( self.build_message(service_id, payload) )
-        response = self.read_response( )
-        self.check_response( service_id, response )
-        return self.parse_response( service_id, response )
+    def send_packet(self, service_id: int, payload: bytearray)->bytearray:
+        self.s.send(self.build_message(service_id, payload))
+        response = self.read_response()
+        self.check_response(service_id, response)
+        return self.parse_response(service_id, response)
 
 
-    def build_message( self, service_id: int, payload: bytearray ) -> bytearray:
-        if( type(service_id) is not int ):
+    def build_message(self, service_id: int, payload: bytearray)->bytearray:
+        if(type(service_id) is not int):
             raise Exception('type error')
         start_of_message = 0x02
         length_of_message = 0x03 + len(payload)
@@ -86,39 +86,39 @@ class controllingChargebyteBoard:
         return response+bytearray([self.check_block_sum(response)])
 
 
-    def read_response( self ) -> bytearray:
+    def read_response(self)->bytearray:
         beginning = self.s.recv(1)
         length = self.s.recv(1)
-        data = self.s.recv( int(length) )
+        data = self.s.recv(int(length))
         return bytearray([beginning,length])+data
 
 
-    def check_response( self, service_id:int, response:bytearray ) -> None:
-        if( response[0] != 0x02 ):
+    def check_response(self, service_id:int, response:bytearray)->None:
+        if(response[0] != 0x02):
             raise Exception('beginning of message was not 0x02')
-        if( response[3] != service_id + 0x80 ):
+        if(response[3] != service_id + 0x80):
             raise Exception('this response does not corresponds to the service that was requested')
-        if( self.check_block_sum(response[:-1]) != response[-1] ):
+        if(self.check_block_sum(response[:-1]) != response[-1]):
             raise Exception('Something went wrong: the check block is wrong!')
 
 
-    def parse_response( self, service_id:int, response:bytearray )-> bytearray:
+    def parse_response(self, service_id:int, response:bytearray)->bytearray:
         return response[4:-1]
 
 
-    def check_block_sum( self, numbers:bytearray ) -> int:
+    def check_block_sum(self, numbers:bytearray)->int:
         response = numbers[0]
-        for num in numbers[1:] :
+        for num in numbers[1:]:
             response = response ^ num
         return response
 
 
-    def join_bytes( self, low_byte:int, high_byte:int ) -> int:
+    def join_bytes(self, low_byte:int, high_byte:int)->int:
         return low_byte + 100*high_byte
 
 
-    def test_device_one( self ):
-        response = self.send_packet( 0x01, bytearray() )
+    def test_device_one(self):
+        response = self.send_packet(0x01, bytearray())
         if(len(response) != 3):
             raise Exception('Something went wrong, the response has an unexpected length!')
         software_version = response[0]
@@ -127,8 +127,8 @@ class controllingChargebyteBoard:
         return software_version, hardware_version, last_reset_reason
 
 
-    def test_device_two( self ):
-        response = self.send_packet( 0x04, bytearray() )
+    def test_device_two(self):
+        response = self.send_packet(0x04, bytearray())
         if(len(response) != 3):
             raise Exception('Something went wrong, the response has an unexpected length!')
         build = self.join_bytes(response[0],response[1])
@@ -136,8 +136,8 @@ class controllingChargebyteBoard:
         return build, last_reset_reason
 
 
-    def get_pwm( self ):
-        response = self.send_packet( 0x10, bytearray() )
+    def get_pwm(self):
+        response = self.send_packet(0x10, bytearray())
         if(len(response) != 4):
             raise Exception('Something went wrong, the response has an unexpected length!')
         frequency = self.join_bytes(response[0],response[1])
@@ -145,25 +145,25 @@ class controllingChargebyteBoard:
         return frequency, duty_cicle
 
 
-    def set_pwm( self, frequency: int, dutycycle: int )->Enum:
-        low_freq = ( frequency & 0xff )
-        high_freq = ( frequency >> 8 ) & 0xff
-        low_duty = ( dutycycle & 0xff )
-        high_duty =  ( dutycycle >> 8 ) & 0xff
-        response = self.send_packet( 0x11, bytearray([low_freq, high_freq, low_duty, high_duty]) )
+    def set_pwm(self, frequency: int, dutycycle: int)->Enum:
+        low_freq = (frequency & 0xff)
+        high_freq = (frequency >> 8) & 0xff
+        low_duty = (dutycycle & 0xff)
+        high_duty =  (dutycycle >> 8) & 0xff
+        response = self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
-        return ControlPWM( response[0] )
+        return ControlPWM(response[0])
 
 
-    def control_pwm( self, control_code: int ) -> Enum:
-        if( control_code < 0 or control_code > 2 ):
-            raise ValueError('The control code must be 0, 1 or 2.', control_code )
-        response = self.send_packet( 0x12, bytearray([control_code]))
-        return StatusPWMGeneration( response[0] )
+    def control_pwm(self, control_code: int)->Enum:
+        if(control_code < 0 or control_code > 2):
+            raise ValueError('The control code must be 0, 1 or 2.', control_code)
+        response = self.send_packet(0x12, bytearray([control_code]))
+        return StatusPWMGeneration(response[0])
 
 
-    def get_ucp( self ):
+    def get_ucp(self):
         response = self.send_packet(0x14, bytearray())
         if(len(response) != 4):
             raise Exception('Something went wrong, the response has an unexpected length!')
@@ -172,12 +172,12 @@ class controllingChargebyteBoard:
         return positive_cp, negative_cp
 
 
-    def get_bit_position( self ):
+    def get_bit_position(self):
         pass
 
 
-    def set_ucp( self, resistance: int ) -> int:
-        if( resistance < 0 or resistance > 2 ):
+    def set_ucp(self, resistance: int)->int:
+        if(resistance < 0 or resistance > 2):
             raise ValueError('The resistance is defined between 0 and 2', resistance)
         response = self.send_packet(0x15, bytearray([resistance]))
         if(len(response) != 1):
@@ -185,47 +185,47 @@ class controllingChargebyteBoard:
         return int(response[0])
 
 
-    def lock_unlock_cable_one( self, command:int ):
-        if( command < 0 or command > 2 ):
+    def lock_unlock_cable_one(self, command:int):
+        if(command < 0 or command > 2):
             raise ValueError('Command must be 0, 1 or 2', command)
-        response = self.send_packet( 0x17, bytearray([command]) )
+        response = self.send_packet(0x17, bytearray([command]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
-        return LockStatus( response[0] )
+        return LockStatus(response[0])
 
 
-    def lock_unlock_cable_two( self, command:int ):
-        if( command < 0 or command > 2 ):
+    def lock_unlock_cable_two(self, command:int):
+        if(command < 0 or command > 2):
             raise ValueError('Command must be 0, 1 or 2', command)
-        response = self.send_packet( 0x18, bytearray([command]) )
+        response = self.send_packet(0x18, bytearray([command]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
-        return LockStatus( response[0] )
+        return LockStatus(response[0])
 
 
-    def get_motor_fault_pin( self ):
+    def get_motor_fault_pin(self):
         response = self.send_packet(0x1A, bytearray())
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
         response = response[0]
-        if( response != 0 ):
+        if(response != 0):
             response = 1
         return StatusCode(response)
 
 
-    def set_cyclic_process_data( self, interval:int ):
-        response = self.send_packet( 0x20, bytearray([interval]) )
+    def set_cyclic_process_data(self, interval:int):
+        response = self.send_packet(0x20, bytearray([interval]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
         return StatusCode(response[0])
 
 
-    def cyclic_process_data( self, interval:int ):
+    def cyclic_process_data(self, interval:int):
         #TODO: this one requires the use of threads to receive the data each time on the interval
         return
 
 
-    def push_button_simple_connect( self, parameter:int ):
+    def push_button_simple_connect(self, parameter:int):
         response = self.send_packet(0x31, bytearray([parameter]))
         if(len(response) != 1):
             raise Exception('Something went wrong, unexpected length!')
@@ -233,28 +233,28 @@ class controllingChargebyteBoard:
 
 
     #execute software reset on device
-    def reset( self ):
-        return self.send_packet( 0x33, bytearray())
+    def reset(self):
+        return self.send_packet(0x33, bytearray())
 
 
-    def activate_proximity_pilot_resistor( self, control:int ):
-        if( control < 0 or control > 7 ):
+    def activate_proximity_pilot_resistor(self, control:int):
+        if(control < 0 or control > 7):
             raise ValueError('Control must be between 0 and 7')
         response = self.send_packet(0x50, bytearray([control]))
         return ErrorCode(response[0])
 
 
-    def enable_pullup_resistor( self ):
+    def enable_pullup_resistor(self):
         #Control=0 deactivates the pullup, all other values activate the pullup
         return self.send_packet(0x51, bytearray([0x03]))[0]
 
 
-    def disable_pullup_resistor( self ):
+    def disable_pullup_resistor(self):
         return self.send_packet(0x51, bytearray([0x00]))[0]
 
 
-    def get_voltage_of_proximity_signal( self ):
-        response = self.send_packet( 0x52, bytearray() )
+    def get_voltage_of_proximity_signal(self):
+        response = self.send_packet(0x52, bytearray())
         if(len(response) != 2):
             raise Exception('Something went wrong, the response has an unexpected length!')
         byte_voltage = self.join_bytes(response[0], response[1])
