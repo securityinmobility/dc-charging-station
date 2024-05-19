@@ -1,25 +1,22 @@
-from chargebyte_board import *
 import socket
+from unittest import mock
 import pytest
-import unittest.mock as mock
-import time
-from multipledispatch import dispatch
-from typing import overload
+from chargebyte_board import ChargebyteBoard
 
 
-@pytest.fixture(autouse=True)
-def mock_socket(mocker):
+@pytest.fixture()
+def mock_socket():
     mock_socket = mock.Mock()
     mock_socket.recv = mock.Mock()
     return mock_socket
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def control(mocker, mock_socket):
-    HOST = socket.gethostname()
-    PORT = 4040  # The port used by the server
+    host = socket.gethostname()
+    port = 4040  # The port used by the server
     mocker.patch('socket.socket', return_value = mock_socket)
-    control = ChargebyteBoard(HOST,PORT)
+    control = ChargebyteBoard(host,port)
     return control
 
 
@@ -35,14 +32,12 @@ def set_recv(data:list, mock):
     mock.recv.side_effect = [data[0], data[1], data[2:]]
 
 
-def proof_send_call( expected, mock):
+def proof_send_call(expected, mock):
     expected.append(xor_calculator(expected))
     mock.send.assert_called_once_with(expected)
 
 
 class TestChargeboardByte:
-
-
 
     def test_check_block_sum(self, control):
         data = [0x10,0x00,0x01]
@@ -244,7 +239,3 @@ class TestChargeboardByte:
         assert answer == 7
         expected_request = bytearray([0x02,0x03,0x00,0x52])
         proof_send_call(expected_request, mock_socket)
-
-
-
-
