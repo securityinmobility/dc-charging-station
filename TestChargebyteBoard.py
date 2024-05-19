@@ -1,4 +1,4 @@
-from controllingChargebyteBoard import *
+from chargebyte_board import *
 import socket
 import pytest
 import unittest.mock as mock
@@ -19,7 +19,7 @@ def control(mocker, mock_socket):
     HOST = socket.gethostname()
     PORT = 4040  # The port used by the server
     mocker.patch('socket.socket', return_value = mock_socket)
-    control = controllingChargebyteBoard(HOST,PORT)
+    control = ChargebyteBoard(HOST,PORT)
     return control
 
 
