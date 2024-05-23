@@ -54,7 +54,6 @@ class ErrorCode(Enum):
     NO_ERROR = 0
     INVALID_PARAMETER = 1
 
-
 class StatusCode(Enum):
     OFF = 0
     ACTIVE = 1
@@ -114,7 +113,7 @@ class ChargebyteBoard:
 
 
     def join_bytes(self, low_byte:int, high_byte:int)->int:
-        return low_byte + 100*high_byte
+        return (high_byte << 8) | low_byte
 
 
     def test_device_one(self)->int|int|Enum:
@@ -271,3 +270,7 @@ class ChargebyteBoard:
             raise Exception('Something went wrong, the response has an unexpected length!')
         byte_voltage = self.join_bytes(response[0], response[1])
         return byte_voltage
+
+
+
+

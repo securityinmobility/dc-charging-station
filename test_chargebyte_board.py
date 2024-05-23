@@ -39,6 +39,12 @@ def proof_send_call(expected, mock):
 
 class TestChargeboardByte:
 
+    def test_join_bytes(self, control):
+        assert control.join_bytes(0x5,0x1) == 0x105
+        assert control.join_bytes(0x11,0x55) == 0x5511
+        assert control.join_bytes(0x98,0x33) == 0x3398
+
+
     def test_check_block_sum(self, control):
         data = [0x10,0x00,0x01]
         expected = 0x11
