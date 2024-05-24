@@ -1,5 +1,6 @@
 import socket
 from enum import Enum
+from enum import Flag, auto
 
 
 class SerialSetting(Enum):
@@ -10,20 +11,20 @@ class SerialSetting(Enum):
     FLOW_CONTROL = "None"
 
 
-class ResetType(Enum):
-    POWER_ON_RESET = 0
-    EXTERNAL_RESET = 1
-    BROWN_OUT_RESET = 2
-    WATCHDOG_RESET = 3
-    JTAG_RESET = 4
+class ResetType(Flag):
+    POWER_ON_RESET = auto()
+    EXTERNAL_RESET = auto()
+    BROWN_OUT_RESET = auto()
+    WATCHDOG_RESET = auto()
+    JTAG_RESET = auto()
 
 
-class ResetReason(Enum):
-    STOP_MODE_ERROR = 0
-    CORE_LOCKUP = 1
-    SOFTWARE_RESET = 2
-    CLOCK_LOSS_RESET = 3
-    WAKEUP_RESET = 4
+class ResetReason(Flag):
+    STOP_MODE_ERROR = auto()
+    CORE_LOCKUP = auto()
+    SOFTWARE_RESET = auto()
+    CLOCK_LOSS_RESET = auto()
+    WAKEUP_RESET = auto()
 
 
 class ControlPWM(Enum):
@@ -53,6 +54,7 @@ class LockStatus(Enum):
 class ErrorCode(Enum):
     NO_ERROR = 0
     INVALID_PARAMETER = 1
+
 
 class StatusCode(Enum):
     OFF = 0
@@ -122,7 +124,7 @@ class ChargebyteBoard:
             raise Exception('Something went wrong, the response has an unexpected length!')
         software_version = response[0]
         hardware_version = response[1]
-        last_reset_reason = ResetReason(response[-1])
+        last_reset_reason = ResetType(response[-1])
         return software_version, hardware_version, last_reset_reason
 
 
