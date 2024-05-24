@@ -57,7 +57,7 @@ class TestChargeboardByte:
         set_recv(data, mock_socket)
         with pytest.raises(Exception) as info:
             control.set_ucp(2)
-        assert info.value.args[0] == 'Wrong length! something went wrong!'
+        assert info.value.args[0] == 'Something went wrong, the response has an unexpected length!'
 
 
     def test_should_verify_service_id(self,control,mock_socket):
