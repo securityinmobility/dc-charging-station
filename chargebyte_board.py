@@ -101,7 +101,7 @@ class ChargebyteBoard:
         return bytearray([beginning,length])+data
 
 
-    def check_response(self, service_id:int, response:bytearray)->None:
+    def check_response(self, service_id:int, response:bytearray):
         if response[0] != 0x02:
             raise ChargebyteException('beginning of message was not 0x02')
         if response[3] != service_id + 0x80:
@@ -110,7 +110,7 @@ class ChargebyteBoard:
             raise ChargebyteException('Something went wrong: the check block is wrong!')
 
 
-    def check_response_length(self, response:list, length:int)->None:
+    def check_response_length(self, response:list, length:int):
         if len(response) != length:
             raise Exception('Something went wrong, the response has an unexpected length!')
 
@@ -134,7 +134,7 @@ class ChargebyteBoard:
         pass
 
 
-    def test_device_one(self)->int|int|Enum:
+    def test_device_one(self)->tuple[int,int,ResetType]:
         response = self.send_packet(0x01, bytearray())
         self.check_response_length(response,3)
         software_version = response[0]
@@ -143,7 +143,7 @@ class ChargebyteBoard:
         return software_version, hardware_version, last_reset_reason
 
 
-    def test_device_two(self)->int|Enum:
+    def test_device_two(self)->tuple[int,ResetReason]:
         response = self.send_packet(0x04, bytearray())
         self.check_response_length(response,3)
         build = self.join_bytes(response[0],response[1])
@@ -151,7 +151,7 @@ class ChargebyteBoard:
         return build, last_reset_reason
 
 
-    def get_pwm(self)->int|int:
+    def get_pwm(self)->tuple[int,int]:
         response = self.send_packet(0x10, bytearray())
         self.check_response_length(response,4)
         frequency = self.join_bytes(response[0],response[1])
@@ -159,7 +159,7 @@ class ChargebyteBoard:
         return frequency, duty_cicle
 
 
-    def set_pwm(self, frequency: int, dutycycle: int)->Enum:
+    def set_pwm(self, frequency: int, dutycycle: int)->ControlPWM:
         low_freq = frequency & 0xff
         high_freq = (frequency >> 8) & 0xff
         low_duty = dutycycle & 0xff
@@ -169,7 +169,7 @@ class ChargebyteBoard:
         return ControlPWM(response[0])
 
 
-    def control_pwm(self, control_code: int)->Enum:
+    def control_pwm(self, control_code: int)->StatusPWMGeneration:
         if control_code < 0 or control_code > 2:
             raise ValueError('The control code must be 0, 1 or 2.', control_code)
         response = self.send_packet(0x12, bytearray([control_code]))
@@ -177,7 +177,7 @@ class ChargebyteBoard:
         return StatusPWMGeneration(response[0])
 
 
-    def get_ucp(self)->int|int:
+    def get_ucp(self)->tuple[int,int]:
         response = self.send_packet(0x14, bytearray())
         self.check_response_length(response,4)
         positive_cp = self.join_bytes(response[0], response[1])
@@ -193,7 +193,7 @@ class ChargebyteBoard:
         return int(response[0])
 
 
-    def lock_unlock_cable_one(self, command:int)->Enum:
+    def lock_unlock_cable_one(self, command:int)->LockStatus:
         if command < 0 or command > 2:
             raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet(0x17, bytearray([command]))
@@ -201,7 +201,7 @@ class ChargebyteBoard:
         return LockStatus(response[0])
 
 
-    def lock_unlock_cable_two(self, command:int)->Enum:
+    def lock_unlock_cable_two(self, command:int)->LockStatus:
         if command < 0 or command > 2:
             raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet(0x18, bytearray([command]))
@@ -209,7 +209,7 @@ class ChargebyteBoard:
         return LockStatus(response[0])
 
 
-    def get_motor_fault_pin(self)->Enum:
+    def get_motor_fault_pin(self)->StatusCode:
         response = self.send_packet(0x1A, bytearray())
         self.check_response_length(response,1)
         response = response[0]
@@ -218,13 +218,13 @@ class ChargebyteBoard:
         return StatusCode(response)
 
 
-    def set_cyclic_process_data(self, interval:int)->Enum:
+    def set_cyclic_process_data(self, interval:int)->StatusCode:
         response = self.send_packet(0x20, bytearray([interval]))
         self.check_response_length(response,1)
         return StatusCode(response[0])
 
 
-    def cyclic_process_data(self, interval:int):
+    def cyclic_process_data(self, interval:int)->tuple[int,int,int,int]:
         response = self.read_response()
         ti = join_bytes(response[4],response[5])
         positive_cp = join_bytes(response[6],response[7])
@@ -233,7 +233,7 @@ class ChargebyteBoard:
         return ti, positive_cp, negative_cp, lock_status
 
 
-    def push_button_simple_connect(self, parameter:int)->Enum:
+    def push_button_simple_connect(self, parameter:int)->ErrorCode:
         if parameter > 255 or parameter < 1:
             raise ValueError('This parameter is defined between 1 and 255!')
         response = self.send_packet(0x31, bytearray([parameter]))
@@ -248,7 +248,7 @@ class ChargebyteBoard:
         return response[0]
 
 
-    def activate_proximity_pilot_resistor(self, control:int)->Enum:
+    def activate_proximity_pilot_resistor(self, control:int)->ErrorCode:
         if control < 0 or control > 7:
             raise ValueError('Control must be between 0 and 7')
         response = self.send_packet(0x50, bytearray([control]))
