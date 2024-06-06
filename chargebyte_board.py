@@ -90,8 +90,8 @@ class ChargebyteBoard:
         start_of_message = 0x02
         length_of_message = 0x03 + len(payload)
         device_adress = 0x00
-        response = bytearray([start_of_message,length_of_message,device_adress,service_id])+payload
-        return response+bytearray([self.check_block_sum(response)])
+        header = bytearray([start_of_message,length_of_message,device_adress,service_id])+payload
+        return header+bytearray([self.check_block_sum(header)])
 
 
     def read_response(self)->bytearray:
