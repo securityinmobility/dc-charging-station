@@ -77,8 +77,6 @@ class ChargebyteBoard:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
         self.s.settimeout(15.0)
-        self.s.setblocking(0)
-        self.s.lock = Lock()
 
 
     def send_packet(self, service_id: int, payload: bytearray) -> bytearray:
@@ -94,15 +92,23 @@ class ChargebyteBoard:
         start_of_message = 0x02
         length_of_message = 0x03 + len(payload)
         device_adress = 0x00
-        header = bytearray([start_of_message,length_of_message,device_adress,service_id])+payload
-        return header+bytearray([self.check_block_sum(header)])
+        header = bytearray([start_of_message,length_of_message,device_adress,service_id]) + payload
+        return header + bytearray([self.check_block_sum(header)])
 
 
     def read_response(self) -> bytearray:
         beginning = self.s.recv(1)
         length = self.s.recv(1)
-        data = self.s.recv(int(length))
-        return bytearray([beginning,length])+data
+        if len(beginning) == 0 or len(length) == 0:
+            raise ChargebyteException("No data returned when trying to read response")
+
+        full_len = int(length[0]) + 2
+
+        data = bytearray(beginning + length)
+        while len(data) < full_len:
+            data += self.s.recv(full_len - len(data))
+
+        return data
 
 
     def check_response(self, service_id:int, response:bytearray):
@@ -110,7 +116,7 @@ class ChargebyteBoard:
             raise ChargebyteException('beginning of message was not 0x02')
         if response[3] != service_id + 0x80:
             raise ChargebyteException('this response does not corresponds to the service that was requested')
-        if self.check_block_sum(response[:-1]) != response[-1]:
+        if self.calculate_checksum(response[:-1]) != response[-1]:
             raise ChargebyteException('Something went wrong: the check block is wrong!')
 
 
@@ -119,13 +125,13 @@ class ChargebyteBoard:
             raise Exception('Something went wrong, the response has an unexpected length!')
 
 
-    def parse_response(self, response:bytearray) -> bytearray:
+    def parse_response(self, response: bytearray) -> bytearray:
         return response[4:-1]
 
 
-    def check_block_sum(self, numbers:bytearray) -> int:
-        response = numbers[0]
-        for num in numbers[1:]:
+    def calculate_checksum(self, numbers: bytearray) -> int:
+        response = 0
+        for num in numbers:
             response = response ^ num
         return response
 
