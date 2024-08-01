@@ -30,7 +30,7 @@ def xor_calculator(parameter:list[int])-> int:
 
 def set_recv(data:list, mock):
     data.append(xor_calculator(data))
-    mock.recv.side_effect = [data[0], data[1], data[2:]]
+    mock.recv.side_effect = [[data[0]],[data[1]],data[2:]]
 
 
 def proof_send_call(expected, mock):
@@ -49,7 +49,7 @@ class TestChargeboardByte:
     def test_check_block_sum(self, control):
         data = [0x10,0x00,0x01]
         expected = 0x11
-        assert control.check_block_sum(data) == expected
+        assert control.calculate_checksum(data) == expected
 
 
     def test_should_check_length(self,control,mock_socket):
@@ -75,7 +75,7 @@ class TestChargeboardByte:
     def test_incorrect_checksum(self,control,mock_socket):
         data = bytearray([0x02,0x06,0x00,0x81,0x81,0x81,0x02])
         data.append(xor_calculator(data)+2)#check sum needs to be wrong
-        mock_socket.recv.side_effect = [data[0], data[1], data[2:]]
+        mock_socket.recv.side_effect = [bytearray([data[0]]), bytearray([data[1]]), bytearray(data[2:])]
         with pytest.raises(Exception) as info:
             control.send_packet(0x01, bytearray())
         assert info.value.args[0] == 'Something went wrong: the check block is wrong!'
@@ -125,7 +125,7 @@ class TestChargeboardByte:
     def test_get_pwm(self,control,mock_socket):
         data = bytearray([0x02,0x07,0x00,0x90,0x02,0x00,0x03,0x00])
         set_recv(data, mock_socket)
-        mock_socket.recv.side_effect = [data[0], data[1], data[2:]]
+        mock_socket.recv.side_effect = [bytearray([data[0]]), bytearray([data[1]]), bytearray(data[2:])]
         frequency, dutycicle = control.get_pwm()
         assert frequency == 2
         assert dutycicle == 3
