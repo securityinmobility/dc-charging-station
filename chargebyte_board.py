@@ -4,12 +4,16 @@ from enum import Flag, auto
 from threading import Thread, Lock
 
 
-class SerialSetting(Enum):
-    BAUD_RATE = 57600
-    DATA_BITS = 8
-    STOP_BITS = 1
-    PARITY = "None"
-    FLOW_CONTROL = "None"
+#class ResistorValue(Enum):
+#    kΩ_27 = 0
+#    kΩ_13 = 1
+#    Ω_347
+
+
+class ControlCode(Enum):
+    DISABLE = 0
+    ENABLE = 1
+    QUERY = 2
 
 
 class ResetType(Flag):
@@ -77,14 +81,14 @@ class ChargebyteBoard:
         self.s.lock = Lock()
 
 
-    def send_packet(self, service_id: int, payload: bytearray)->bytearray:
+    def send_packet(self, service_id: int, payload: bytearray) -> bytearray:
         self.s.send(self.build_message(service_id, payload))
         response = self.read_response()
         self.check_response(service_id, response)
         return self.parse_response(response)
 
 
-    def build_message(self, service_id: int, payload: bytearray)->bytearray:
+    def build_message(self, service_id: int, payload: bytearray) -> bytearray:
         if not isinstance(service_id,int):
             raise TypeError
         start_of_message = 0x02
@@ -94,7 +98,7 @@ class ChargebyteBoard:
         return header+bytearray([self.check_block_sum(header)])
 
 
-    def read_response(self)->bytearray:
+    def read_response(self) -> bytearray:
         beginning = self.s.recv(1)
         length = self.s.recv(1)
         data = self.s.recv(int(length))
@@ -110,23 +114,23 @@ class ChargebyteBoard:
             raise ChargebyteException('Something went wrong: the check block is wrong!')
 
 
-    def check_response_length(self, response:list, length:int):
+    def check_response_length(self, response:list, length:int) -> None:
         if len(response) != length:
             raise Exception('Something went wrong, the response has an unexpected length!')
 
 
-    def parse_response(self, response:bytearray)->bytearray:
+    def parse_response(self, response:bytearray) -> bytearray:
         return response[4:-1]
 
 
-    def check_block_sum(self, numbers:bytearray)->int:
+    def check_block_sum(self, numbers:bytearray) -> int:
         response = numbers[0]
         for num in numbers[1:]:
             response = response ^ num
         return response
 
 
-    def join_bytes(self, low_byte:int, high_byte:int)->int:
+    def join_bytes(self, low_byte:int, high_byte:int) -> int:
         return (high_byte << 8) | low_byte
 
 
@@ -134,7 +138,7 @@ class ChargebyteBoard:
         pass
 
 
-    def test_device_one(self)->tuple[int,int,ResetType]:
+    def test_device_one(self) -> tuple[int,int,ResetType]:
         response = self.send_packet(0x01, bytearray())
         self.check_response_length(response,3)
         software_version = response[0]
@@ -143,7 +147,7 @@ class ChargebyteBoard:
         return software_version, hardware_version, last_reset_reason
 
 
-    def test_device_two(self)->tuple[int,ResetReason]:
+    def test_device_two(self) -> tuple[int,ResetReason]:
         response = self.send_packet(0x04, bytearray())
         self.check_response_length(response,3)
         build = self.join_bytes(response[0],response[1])
@@ -151,7 +155,7 @@ class ChargebyteBoard:
         return build, last_reset_reason
 
 
-    def get_pwm(self)->tuple[int,int]:
+    def get_pwm(self) -> tuple[int,int]:
         response = self.send_packet(0x10, bytearray())
         self.check_response_length(response,4)
         frequency = self.join_bytes(response[0],response[1])
@@ -159,7 +163,7 @@ class ChargebyteBoard:
         return frequency, duty_cicle
 
 
-    def set_pwm(self, frequency: int, dutycycle: int)->ControlPWM:
+    def set_pwm(self, frequency: int, dutycycle: int) -> ControlPWM:
         low_freq = frequency & 0xff
         high_freq = (frequency >> 8) & 0xff
         low_duty = dutycycle & 0xff
@@ -169,15 +173,13 @@ class ChargebyteBoard:
         return ControlPWM(response[0])
 
 
-    def control_pwm(self, control_code: int)->StatusPWMGeneration:
-        if control_code < 0 or control_code > 2:
-            raise ValueError('The control code must be 0, 1 or 2.', control_code)
+    def control_pwm( self, control_code: ControlCode ) -> StatusPWMGeneration:
         response = self.send_packet(0x12, bytearray([control_code]))
         self.check_response_length(response,1)
         return StatusPWMGeneration(response[0])
 
 
-    def get_ucp(self)->tuple[int,int]:
+    def get_ucp(self) -> tuple[int,int]:
         response = self.send_packet(0x14, bytearray())
         self.check_response_length(response,4)
         positive_cp = self.join_bytes(response[0], response[1])
@@ -185,7 +187,7 @@ class ChargebyteBoard:
         return positive_cp, negative_cp
 
 
-    def set_ucp(self, resistance: int)->int:
+    def set_ucp(self, resistance: int) -> int:
         if resistance < 0 or resistance > 2:
             raise ValueError('The resistance is defined between 0 and 2', resistance)
         response = self.send_packet(0x15, bytearray([resistance]))
@@ -193,23 +195,23 @@ class ChargebyteBoard:
         return int(response[0])
 
 
-    def lock_unlock_cable_one(self, command:int)->LockStatus:
-        if command < 0 or command > 2:
-            raise ValueError('Command must be 0, 1 or 2', command)
+    def lock_unlock_cable_one( self, command:ControlCode ) -> LockStatus:
+        #if command < 0 or command > 2:
+        #    raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet(0x17, bytearray([command]))
         self.check_response_length(response,1)
         return LockStatus(response[0])
 
 
-    def lock_unlock_cable_two(self, command:int)->LockStatus:
-        if command < 0 or command > 2:
-            raise ValueError('Command must be 0, 1 or 2', command)
+    def lock_unlock_cable_two( self, command:ControlCode ) -> LockStatus:
+        #if command < 0 or command > 2:
+        #    raise ValueError('Command must be 0, 1 or 2', command)
         response = self.send_packet(0x18, bytearray([command]))
         self.check_response_length(response,1)
         return LockStatus(response[0])
 
 
-    def get_motor_fault_pin(self)->StatusCode:
+    def get_motor_fault_pin(self) -> StatusCode:
         response = self.send_packet(0x1A, bytearray())
         self.check_response_length(response,1)
         response = response[0]
@@ -218,13 +220,13 @@ class ChargebyteBoard:
         return StatusCode(response)
 
 
-    def set_cyclic_process_data(self, interval:int)->StatusCode:
+    def set_cyclic_process_data(self, interval:int) -> StatusCode:
         response = self.send_packet(0x20, bytearray([interval]))
         self.check_response_length(response,1)
         return StatusCode(response[0])
 
 
-    def cyclic_process_data(self, interval:int)->tuple[int,int,int,int]:
+    def cyclic_process_data(self, interval:int) -> tuple[int,int,int,int]:
         response = self.read_response()
         ti = join_bytes(response[4],response[5])
         positive_cp = join_bytes(response[6],response[7])
@@ -233,7 +235,7 @@ class ChargebyteBoard:
         return ti, positive_cp, negative_cp, lock_status
 
 
-    def push_button_simple_connect(self, parameter:int)->ErrorCode:
+    def push_button_simple_connect(self, parameter:int) -> ErrorCode:
         if parameter > 255 or parameter < 1:
             raise ValueError('This parameter is defined between 1 and 255!')
         response = self.send_packet(0x31, bytearray([parameter]))
@@ -242,13 +244,13 @@ class ChargebyteBoard:
 
 
     #execute software reset on device
-    def reset(self)->int:
+    def reset(self) -> int:
         response = self.send_packet(0x33, bytearray())
         self.check_response_length(response,1)
         return response[0]
 
 
-    def activate_proximity_pilot_resistor(self, control:int)->ErrorCode:
+    def activate_proximity_pilot_resistor(self, control:int) -> ErrorCode:
         if control < 0 or control > 7:
             raise ValueError('Control must be between 0 and 7')
         response = self.send_packet(0x50, bytearray([control]))
@@ -256,20 +258,19 @@ class ChargebyteBoard:
         return ErrorCode(response[0])
 
 
-    def enable_pullup_resistor(self)->int:
-        #Control=0 deactivates the pullup, all other values activate the pullup
+    def enable_pullup_resistor(self) -> int:
         response = self.send_packet(0x51, bytearray([0x03]))
         self.check_response_length(response,1)
         return response[0]
 
 
-    def disable_pullup_resistor(self)->int:
+    def disable_pullup_resistor(self) -> int:
         response = self.send_packet(0x51, bytearray([0x00]))
         self.check_response_length(response,1)
         return response[0]
 
 
-    def get_voltage_of_proximity_signal(self)->int:
+    def get_voltage_of_proximity_signal(self) -> int:
         response = self.send_packet(0x52, bytearray())
         self.check_response_length(response,2)
         byte_voltage = self.join_bytes(response[0], response[1])
