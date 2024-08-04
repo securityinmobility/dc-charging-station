@@ -80,18 +80,19 @@ class ChargebyteBoard:
         self.s.connect((host, port))
         self.s.settimeout(15.0)
         self.answers = []
+        self.mutex = Lock()
 
 
-    def send_packet(self, service_id: int, payload: bytearray) -> bytearray:
+    def send_packet(self, service_id: int, payload: bytearray) -> bytearray|None:
         self.s.send(self.build_message(service_id, payload))
         self.read_response()
         for response in self.answers:
             if response[3] == service_id + 0x80 :
+                mutex.aquire()
                 self.answers.remove(response)
+                mutex.release()
                 return self.parse_response(response)
-        #response = self.read_response()
-        #self.check_response(service_id, response)
-        #return self.parse_response(response)
+        ##should we throw an exception here?
 
 
     def build_message(self, service_id: int, payload: bytearray) -> bytearray:
