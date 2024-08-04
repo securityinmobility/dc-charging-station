@@ -75,7 +75,7 @@ class ChargebyteException(Exception):
 
 class ChargebyteBoard:
 
-    def __init__(self, host: str, port: int):
+    def __init__(self, host:str, port:int):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))
         self.s.settimeout(15.0)
@@ -83,16 +83,19 @@ class ChargebyteBoard:
         self.mutex = Lock()
 
 
-    def send_packet(self, service_id: int, payload: bytearray) -> bytearray|None:
+    def send_packet( self, service_id:int, payload:bytearray ) -> None:
         self.s.send(self.build_message(service_id, payload))
         self.read_response()
+
+
+    def get_response( self, service_id:int ) -> bytearray:
         for response in self.answers:
             if response[3] == service_id + 0x80 :
                 self.mutex.acquire()
                 self.answers.remove(response)
                 self.mutex.release()
                 return self.parse_response(response)
-        ##should we throw an exception here?
+        raise Exception("we didnt get an answer")
 
 
     def build_message(self, service_id: int, payload: bytearray) -> bytearray:
@@ -115,14 +118,15 @@ class ChargebyteBoard:
         while len(data) < full_len:
             data += self.s.recv(full_len - len(data))
         self.check_response(data)
-        self.answers.append(data)
+        if data[3] != 0xC0  :
+            self.answers.append(data)
+        else:
+            pass
 
 
     def check_response(self, response:bytearray):
         if response[0] != 0x02:
             raise ChargebyteException('beginning of message was not 0x02')
-        #if response[3] != service_id + 0x80:
-        #    raise ChargebyteException('this response does not corresponds to the service that was requested')
         if self.calculate_checksum(response[:-1]) != response[-1]:
             raise ChargebyteException('Something went wrong: the check block is wrong!')
 
@@ -152,7 +156,8 @@ class ChargebyteBoard:
 
 
     def test_device_one(self) -> tuple[int,int,ResetType]:
-        response = self.send_packet(0x01, bytearray())
+        self.send_packet(0x01, bytearray())
+        response = self.get_response(0x01)
         self.check_response_length(response,3)
         software_version = response[0]
         hardware_version = response[1]
@@ -161,7 +166,8 @@ class ChargebyteBoard:
 
 
     def test_device_two(self) -> tuple[int,ResetReason]:
-        response = self.send_packet(0x04, bytearray())
+        self.send_packet(0x04, bytearray())
+        response = self.get_response(0x04)
         self.check_response_length(response,3)
         build = self.join_bytes(response[0],response[1])
         last_reset_reason = ResetReason(response[2])
@@ -169,7 +175,8 @@ class ChargebyteBoard:
 
 
     def get_pwm(self) -> tuple[int,int]:
-        response = self.send_packet(0x10, bytearray())
+        self.send_packet(0x10, bytearray())
+        response = self.get_response(0x10)
         self.check_response_length(response,4)
         frequency = self.join_bytes(response[0],response[1])
         duty_cicle = self.join_bytes(response[2], response[3])
@@ -181,19 +188,22 @@ class ChargebyteBoard:
         high_freq = (frequency >> 8) & 0xff
         low_duty = dutycycle & 0xff
         high_duty =  (dutycycle >> 8) & 0xff
-        response = self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
+        self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
+        response = self.get_response(0x11)
         self.check_response_length(response,1)
         return ControlPWM(response[0])
 
 
     def control_pwm( self, control_code: ControlCode ) -> StatusPWMGeneration:
-        response = self.send_packet(0x12, bytearray([control_code]))
+        self.send_packet(0x12, bytearray([control_code]))
+        response = self.get_response(0x12)
         self.check_response_length(response,1)
         return StatusPWMGeneration(response[0])
 
 
     def get_ucp(self) -> tuple[int,int]:
-        response = self.send_packet(0x14, bytearray())
+        self.send_packet(0x14, bytearray())
+        response = self.get_response(0x14)
         self.check_response_length(response,4)
         positive_cp = self.join_bytes(response[0], response[1])
         negative_cp = self.join_bytes(response[2],response[3])
@@ -203,25 +213,29 @@ class ChargebyteBoard:
     def set_ucp(self, resistance: int) -> int:
         if resistance < 0 or resistance > 2:
             raise ValueError('The resistance is defined between 0 and 2', resistance)
-        response = self.send_packet(0x15, bytearray([resistance]))
+        self.send_packet(0x15, bytearray([resistance]))
+        response = self.get_response(0x15)
         self.check_response_length(response,1)
         return int(response[0])
 
 
     def lock_unlock_cable_one( self, command:ControlCode ) -> LockStatus:
-        response = self.send_packet(0x17, bytearray([command]))
+        self.send_packet(0x17, bytearray([command]))
+        response = self.get_response(0x17)
         self.check_response_length(response,1)
         return LockStatus(response[0])
 
 
     def lock_unlock_cable_two( self, command:ControlCode ) -> LockStatus:
-        response = self.send_packet(0x18, bytearray([command]))
+        self.send_packet(0x18, bytearray([command]))
+        response = self.get_response(0x18)
         self.check_response_length(response,1)
         return LockStatus(response[0])
 
 
     def get_motor_fault_pin(self) -> StatusCode:
-        response = self.send_packet(0x1A, bytearray())
+        self.send_packet(0x1A, bytearray())
+        response = self.get_response(0x1A)
         self.check_response_length(response,1)
         response = response[0]
         if response != 0:
@@ -230,13 +244,14 @@ class ChargebyteBoard:
 
 
     def set_cyclic_process_data(self, interval:int) -> StatusCode:
-        response = self.send_packet(0x20, bytearray([interval]))
+        self.send_packet(0x20, bytearray([interval]))
+        response = self.get_response(0x20)
         self.check_response_length(response,1)
         return StatusCode(response[0])
 
 
-    def cyclic_process_data(self, interval:int) -> tuple[int,int,int,int]:
-        response = self.read_response()
+    def cyclic_process_data(self, response) -> tuple[int,int,int,int]:
+        #response = self.read_response()
         ti = join_bytes(response[4],response[5])
         positive_cp = join_bytes(response[6],response[7])
         negative_cp = join_bytes(response[8],response[9])
@@ -247,14 +262,16 @@ class ChargebyteBoard:
     def push_button_simple_connect(self, parameter:int) -> ErrorCode:
         if parameter > 255 or parameter < 1:
             raise ValueError('This parameter is defined between 1 and 255!')
-        response = self.send_packet(0x31, bytearray([parameter]))
+        self.send_packet(0x31, bytearray([parameter]))
+        response = self.get_response(0x31)
         self.check_response_length(response,1)
         return ErrorCode(response[0])
 
 
     #execute software reset on device
     def reset(self) -> int:
-        response = self.send_packet(0x33, bytearray())
+        self.send_packet(0x33, bytearray())
+        response = self.get_response(0x33)
         self.check_response_length(response,1)
         return response[0]
 
@@ -262,25 +279,29 @@ class ChargebyteBoard:
     def activate_proximity_pilot_resistor(self, control:int) -> ErrorCode:
         if control < 0 or control > 7:
             raise ValueError('Control must be between 0 and 7')
-        response = self.send_packet(0x50, bytearray([control]))
+        self.send_packet(0x50, bytearray([control]))
+        response = self.get_response(0x50)
         self.check_response_length(response,1)
         return ErrorCode(response[0])
 
 
     def enable_pullup_resistor(self) -> int:
         response = self.send_packet(0x51, bytearray([0x03]))
+        response = self.get_response(0x51)
         self.check_response_length(response,1)
         return response[0]
 
 
     def disable_pullup_resistor(self) -> int:
-        response = self.send_packet(0x51, bytearray([0x00]))
+        self.send_packet(0x51, bytearray([0x00]))
+        response = self.get_response(0x51)
         self.check_response_length(response,1)
         return response[0]
 
 
     def get_voltage_of_proximity_signal(self) -> int:
-        response = self.send_packet(0x52, bytearray())
+        self.send_packet(0x52, bytearray())
+        response = self.get_response(0x52)
         self.check_response_length(response,2)
         byte_voltage = self.join_bytes(response[0], response[1])
         return byte_voltage
