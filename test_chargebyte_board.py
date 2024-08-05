@@ -65,7 +65,8 @@ class TestChargeboardByte:
         set_recv(data, mock_socket)
         with pytest.raises(Exception) as info:
             control.send_packet(0x51, bytearray())
-        assert info.value.args[0] == 'this response does not corresponds to the service that was requested'
+            control.get_response(0x51)
+        assert info.value.args[0] == 'we didnt get an answer'
 
 
     def test_should_time_out(self, control, mock_socket):
