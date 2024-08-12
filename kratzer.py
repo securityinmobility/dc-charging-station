@@ -1,5 +1,5 @@
-
-
+import socket
+import struct
 
 
 class kratzer:
@@ -20,7 +20,7 @@ class kratzer:
         { "name": "S2M_AS_BATT_R3",     "offset": 48, "length": 4, "type": "Real" },
         { "name": "S2M_AS_BATT_R4",     "offset": 52, "length": 4, "type": "Real" },
         { "name": "S2M_AS_BATT_C1",     "offset": 56, "length": 4, "type": "Real" },
-        { "name": "S2M_AV_BATT_I_filter", "offset": 60, "length": 4, "type": "Real" },
+        { "name": "S2M_AV_BATT_I_filter", "offset": 60, "length": 4, "type": "Real"},
         { "name": "S2M_AV_BATT_U0_A",   "offset": 64, "length": 4, "type": "Real" },
         { "name": "S2M_AV_REG_KP_I",    "offset": 68, "length": 4, "type": "Real" },
         { "name": "S2M_AV_REG_TN_I",    "offset": 72, "length": 4, "type": "Real" },
@@ -76,17 +76,43 @@ class kratzer:
         {"offset": 94, "name": "M2S_SP_REG_I_Ramp",  "length": 4, "type": "Real"},
         {"offset": 98, "name": "M2S_SP_REG_ParSet",  "length": 2, "type": "UINT"},
         {"offset": 100,"name": "M2S_SP_REG_Mode",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_BATT_Model",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_RS_CW2",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_P",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_BATT_C2",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_BATT_L1",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_BATT_U0_B",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_LF_Mode",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_MF_Mode",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_LF_Hz",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_LF_U",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_MF_Hz",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_MF_I",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_RPL_MF_U",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_SOC_C_Nom",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_SOC_0",    "length": 2, "type": "UINT"}
+        {"offset": 100,"name": "M2S_RS_SOC_0",    "length": 2, "type": "UINT"}
         ]
 
-    packet = receiveUdpSomehow()
-    result = {}
-    for field in fields:
-        if field["type"] == "Real":
-          result[field["name"]] = # ... somehow decode real 
-    pass
+    #    packet = receiveUdpSomehow()
+    #    result = {}
+    #    for field in fields:
+    #        if field["type"] == "Real":
+    #          result[field["name"]] = # ... somehow decode real 
+
+    # print("received message: %s" % data)
+
+    def __init__(self, IP:str, port:str):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind((IP, port))
+        self.mutex = Lock()
 
 
+    def send_package():
+        pass
 
 
+    def receive_package():
+        pass
 
 
