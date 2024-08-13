@@ -70,28 +70,28 @@ class kratzer:
         {"offset": 70, "name": "M2S_SP_REG_TN_I",    "length": 4, "type": "Real"},
         {"offset": 74, "name": "M2S_SP_REG_KP_U",    "length": 4, "type": "Real"},
         {"offset": 78, "name": "M2S_SP_REG_TN_U",    "length": 4, "type": "Real"},
-        {"offset": 82, "name": "M2S_SP_REG_KP_M",    "length": 4, "type": "Real"},
-        {"offset": 86, "name": "M2S_SP_REG_TN_M",    "length": 4, "type": "Real"},
-        {"offset": 90, "name": "M2S_SP_REG_U_Ramp",  "length": 4, "type": "Real"},
-        {"offset": 94, "name": "M2S_SP_REG_I_Ramp",  "length": 4, "type": "Real"},
-        {"offset": 98, "name": "M2S_SP_REG_ParSet",  "length": 2, "type": "UINT"},
-        {"offset": 100,"name": "M2S_SP_REG_Mode",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_BATT_Model",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_RS_CW2",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_P",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_BATT_C2",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_BATT_L1",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_BATT_U0_B",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_LF_Mode",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_MF_Mode",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_LF_Hz",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_LF_U",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_MF_Hz",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_MF_I",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_RPL_MF_U",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_SOC_C_Nom",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_SP_SOC_0",    "length": 2, "type": "UINT"}
-        {"offset": 100,"name": "M2S_RS_SOC_0",    "length": 2, "type": "UINT"}
+        {"offset": 82, "name": "M2S_SP_REG_KP_M",   "length": 4, "type": "Real"},
+        {"offset": 86, "name": "M2S_SP_REG_TN_M",   "length": 4, "type": "Real"},
+        {"offset": 90, "name": "M2S_SP_REG_U_Ramp", "length": 4, "type": "Real"},
+        {"offset": 94, "name": "M2S_SP_REG_I_Ramp", "length": 4, "type": "Real"},
+        {"offset": 98, "name": "M2S_SP_REG_ParSet", "length": 2, "type": "UINT"},
+        {"offset": 100,"name": "M2S_SP_REG_Mode",   "length": 2, "type": "UINT"}
+        {"offset": 102,"name": "M2S_SP_BATT_Model", "length": 2, "type": "UINT"}
+        {"offset": 104,"name": "M2S_RS_CW2",        "length": 2, "type": "UINT"}
+        {"offset": 106,"name": "M2S_SP_P",          "length": 4, "type": "UINT"}
+        {"offset": 110,"name": "M2S_SP_BATT_C2",    "length": 4, "type": "UINT"}
+        {"offset": 114,"name": "M2S_SP_BATT_L1",    "length": 4, "type": "UINT"}
+        {"offset": 118,"name": "M2S_SP_BATT_U0_B",  "length": 4, "type": "UINT"}
+        {"offset": 122,"name": "M2S_SP_RPL_LF_Mode","length": 2, "type": "UINT"}
+        {"offset": 124,"name": "M2S_SP_RPL_MF_Mode","length": 2, "type": "UINT"}
+        {"offset": 126,"name": "M2S_SP_RPL_LF_Hz",  "length": 4, "type": "UINT"}
+        {"offset": 130,"name": "M2S_SP_RPL_LF_U",   "length": 4, "type": "UINT"}
+        {"offset": 134,"name": "M2S_SP_RPL_MF_Hz",  "length": 2, "type": "UINT"}
+        {"offset": 136,"name": "M2S_SP_RPL_MF_I",   "length": 4, "type": "UINT"}
+        {"offset": 140,"name": "M2S_SP_RPL_MF_U",   "length": 4, "type": "UINT"}
+        {"offset": 144,"name": "M2S_SP_SOC_C_Nom",  "length": 4, "type": "UINT"}
+        {"offset": 148,"name": "M2S_SP_SOC_0",      "length": 4, "type": "UINT"}
+        {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
 
     #    packet = receiveUdpSomehow()
@@ -108,11 +108,11 @@ class kratzer:
         self.mutex = Lock()
 
 
-    def send_package():
+    def send_package(self, message):
         pass
 
 
-    def receive_package():
+    def receive_package(self):
         pass
 
 
