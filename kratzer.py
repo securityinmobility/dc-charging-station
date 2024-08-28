@@ -3,9 +3,9 @@ import struct
 
 
 class kratzer:
-    fields = [
-        { "name": "S2M_AS_SW1",         "offset": 0, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_SW2",         "offset": 2, "length": 2, "type": "UNIT" },
+    slave_to_master = [
+        { "name": "S2M_AS_SW1",         "offset": 0, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_SW2",         "offset": 2, "length": 2, "type": "UINT" },
         { "name": "S2M_AV_U",           "offset": 4, "length": 4, "type": "Real" },
         { "name": "S2M_AV_I",           "offset": 8, "length": 4, "type": "Real" },
         { "name": "S2M_AV_P",           "offset": 12, "length": 4, "type": "Real" },
@@ -31,25 +31,25 @@ class kratzer:
         { "name": "S2M_AV_REG_U_ramp",  "offset": 92, "length": 4, "type": "Real" },
         { "name": "S2M_AV_REG_I_ramp",  "offset": 96, "length": 4, "type": "Real" },
         { "name": "S2M_AS_REG_ParSet",  "offset": 100, "length": 2, "type": "SINT" },
-        { "name": "S2M_AS_REG_ParSet_Err", "offset": 102, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AV_REG_Mode",    "offset": 104, "length": 2, "type": "UNIT" },
+        { "name": "S2M_AS_REG_ParSet_Err", "offset": 102, "length": 2, "type": "UINT" },
+        { "name": "S2M_AV_REG_Mode",    "offset": 104, "length": 2, "type": "UINT" },
         { "name": "S2M_AS_BATT_Model",  "offset": 106, "length": 2, "type": "SINT" },
-        { "name": "S2M_AS_ZR_Error_a",  "offset": 108, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_ZR_Error_b",  "offset": 110, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_UWR_Error_a", "offset": 112, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_UWR_error_b", "offset": 114, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_RK_Error_a",  "offset": 116, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_RK_Error_b",  "offset": 118, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_TSB_Error_a", "offset": 120, "length": 2, "type": "UNIT" },
-        { "name": "S2M_AS_TSB_Error_b", "offset": 122, "length": 2, "type": "UNIT" },
+        { "name": "S2M_AS_ZR_Error_a",  "offset": 108, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_ZR_Error_b",  "offset": 110, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_UWR_Error_a", "offset": 112, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_UWR_error_b", "offset": 114, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_RK_Error_a",  "offset": 116, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_RK_Error_b",  "offset": 118, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_TSB_Error_a", "offset": 120, "length": 2, "type": "UINT" },
+        { "name": "S2M_AS_TSB_Error_b", "offset": 122, "length": 2, "type": "UINT" },
         { "name": "S2M_AS_BATT_C2",     "offset": 124, "length": 4, "type": "Real" },
         { "name": "S2M_AS_BATT_L1",     "offset": 128, "length": 4, "type": "Real" },
         { "name": "S2M_AV_BATT_U0_B",   "offset": 132, "length": 4, "type": "Real" },
-        { "name": "S2M_AS_TSB_Error_c", "offset": 136, "length": 2, "type": "UNIT" },
+        { "name": "S2M_AS_TSB_Error_c", "offset": 136, "length": 2, "type": "UINT" },
         { "name": "S2M_AV_BATT_SOC",    "offset": 138, "length": 4, "type": "Real" }]
 
-    dictionary = [
-        { "name": "M2S_RS_CW1", "offset": 0, "length": 2, "type": "UNIT" },
+    master_to_slave = [
+        { "name": "M2S_RS_CW1", "offset": 0, "length": 2, "type": "UINT" },
         { "name": "M2S_SP_U",   "offset": 2, "length": 4, "type": "Real" },
         {"offset": 6,  "name": "M2S_SP_Imin",        "length": 4, "type": "Real"},
         {"offset": 10, "name": "M2S_SP_Imax",        "length": 4, "type": "Real"},
@@ -66,7 +66,7 @@ class kratzer:
         {"offset": 54, "name": "M2S_SP_BATT_C1",     "length": 4, "type": "Real"},
         {"offset": 58, "name": "M2S_SP_REG_I_Filter","length": 4, "type": "Real"},
         {"offset": 62, "name": "M2S_SP_REG_U0_A",    "length": 4, "type": "Real"},
-        {"offset": 66, "name": "M2S_SP_REG_KP_I",    "length": 4, "type": "Real"},
+        {"offset": 66, "nam:e": "M2S_SP_REG_KP_I",    "length": 4, "type": "Real"},
         {"offset": 70, "name": "M2S_SP_REG_TN_I",    "length": 4, "type": "Real"},
         {"offset": 74, "name": "M2S_SP_REG_KP_U",    "length": 4, "type": "Real"},
         {"offset": 78, "name": "M2S_SP_REG_TN_U",    "length": 4, "type": "Real"},
@@ -94,14 +94,6 @@ class kratzer:
         {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
 
-    #    packet = receiveUdpSomehow()
-    #    result = {}
-    #    for field in fields:
-    #        if field["type"] == "Real":
-    #          result[field["name"]] = # ... somehow decode real 
-
-    # print("received message: %s" % data)
-
     def __init__(self, IP:str, port:str):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((IP, port))
@@ -113,6 +105,42 @@ class kratzer:
 
 
     def receive_package(self):
+        message, sender = self.socket.recvfrom(142)
+
+
+    def set_M2S_RS_SOC_0(self, new_value):
         pass
+
+
+    def set_M2S_SP_SOC_0():
+        pass
+
+
+    def decode( message:bytearray, code:str ) -> list:
+        result = {}
+        for field in self.slave_to_master:
+            if field["type"] == "Real":
+                decode_real(message[field["offset"] : field["offset"] + field["length"]])
+            if field["type"] == "UINT":
+                decode_uint(message[field["offset"] : field["offset"] + field["length"]])
+            if field["type"] == "SINT":
+                decode_sint(message[field["offset"] : field["offset"] + field["length"]])
+         print("received message: %s" % data)
+
+
+    def decode_sint( message:bytearray ) -> int:
+        # Assuming 16-bit signed integer
+        return struct.unpack('<h', byte_array)[0]
+
+
+    def decode_uint( message:bytearray ) -> int:
+        # Assuming 16-bit unsigned integer
+        return struct.unpack('<H', byte_array)[0]
+
+
+    def decode_real( message:bytearray ) -> float:
+        # Assuming 32-bit float
+        return struct.unpack('<f', byte_array)[0]
+
 
 
