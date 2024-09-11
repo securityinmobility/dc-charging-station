@@ -2,6 +2,12 @@ import socket
 import struct
 
 
+#    'f'    # 4-byte float
+#    'H',    # 2-byte unsigned short
+#     'h', 2 byte signed int
+#    'i',    # 4-byte signed int
+#    'I',    # 4-byte unsigned int
+
 class kratzer:
     slave_to_master = [
         { "name": "S2M_AS_SW1",         "offset": 0, "length": 2, "type": "UINT" },
@@ -299,22 +305,49 @@ class kratzer:
          print("received message: %s" % data)
 
 
-    def encode_message():
+    def build_message(self) -> bytearray:
+        result = bytearray()
+        for line in master_to_slave:
+            if line["length"] == 4:
+                if line ["type"] == "UINT" :
+                    encoded = struct.pack('I', number)
+                elif line["type"] == "SINT":
+                    encoded = struct.pack('i', number)
+                elif line["type"] == "Real":
+                    encoded = struct.pack('f', number)
+            else:
+                if line ["type"] == "UINT" :
+                    encoded = struct.pack('H', number)
+                elif line["type"] == "SINT":
+                    encoded = struct.pack('h', number)
+            result.extend(encoded)
+        return result
+
+
+    def encode_message( self, number_of_bytes:int, code:str, value:int ):
+#    'f'    # 4-byte float
+#    'H',    # 2-byte unsigned short
+#    'i',    # 4-byte signed int
+#    'I',    # 4-byte unsigned int
+#     'h', 2 byte signed int
         pass
 
 
     def decode_signed_int( message:bytearray ) -> int:
-        # Assuming 16-bit signed integer
-        return struct.unpack('<h', byte_array)[0]
+        if(len(message == 4):
+            return struct.unpack('<i', byte_array)[0]
+        else:
+            return struct.unpack('<h', byte_array)[0]
 
 
     def decode_unsigned_int( message:bytearray ) -> int:
-        # Assuming 16-bit unsigned integer
-        return struct.unpack('<H', byte_array)[0]
+        if(len(message == 4):
+            return struct.unpack('<I', byte_array)[0]
+        else:
+            return struct.unpack('<H', byte_array)[0]
 
 
     def decode_float( message:bytearray ) -> float:
-        # Assuming 32-bit float
         return struct.unpack('<f', byte_array)[0]
 
 
