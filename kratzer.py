@@ -51,48 +51,93 @@ class kratzer:
     master_to_slave = [
         { "name": "M2S_RS_CW1", "offset": 0, "length": 2, "type": "UINT" },
         { "name": "M2S_SP_U",   "offset": 2, "length": 4, "type": "Real" },
-        {"offset": 6,  "name": "M2S_SP_Imin",        "length": 4, "type": "Real"},
-        {"offset": 10, "name": "M2S_SP_Imax",        "length": 4, "type": "Real"},
-        {"offset": 14, "name": "M2S_SP_Umin",        "length": 4, "type": "Real"},
-        {"offset": 18, "name": "M2S_SP_Umax",        "length": 4, "type": "Real"},
-        {"offset": 22, "name": "M2S_SP_LIMIT_Umin",  "length": 4, "type": "Real"},
-        {"offset": 26, "name": "M2S_SP_LIMIT_Umax",  "length": 4, "type": "Real"},
-        {"offset": 30, "name": "M2S_SP_LIMIT_Imin",  "length": 4, "type": "Real"},
-        {"offset": 34, "name": "M2S_SP_LIMIT_Imax",  "length": 4, "type": "Real"},
-        {"offset": 38, "name": "M2S_SP_BATT_R1",     "length": 4, "type": "Real"},
-        {"offset": 42, "name": "M2S_SP_BATT_R2",     "length": 4, "type": "Real"},
-        {"offset": 46, "name": "M2S_SP_BATT_R3",     "length": 4, "type": "Real"},
-        {"offset": 50, "name": "M2S_SP_BATT_R4",     "length": 4, "type": "Real"},
-        {"offset": 54, "name": "M2S_SP_BATT_C1",     "length": 4, "type": "Real"},
-        {"offset": 58, "name": "M2S_SP_REG_I_Filter","length": 4, "type": "Real"},
-        {"offset": 62, "name": "M2S_SP_REG_U0_A",    "length": 4, "type": "Real"},
+        {"offset": 6,  "name": "M2S_SP_Imin",        "length": 4, "type": "Real" },
+        {"offset": 10, "name": "M2S_SP_Imax",        "length": 4, "type": "Real" },
+        {"offset": 14, "name": "M2S_SP_Umin",        "length": 4, "type": "Real" },
+        {"offset": 18, "name": "M2S_SP_Umax",        "length": 4, "type": "Real" },
+        {"offset": 22, "name": "M2S_SP_LIMIT_Umin",  "length": 4, "type": "Real" },
+        {"offset": 26, "name": "M2S_SP_LIMIT_Umax",  "length": 4, "type": "Real" },
+        {"offset": 30, "name": "M2S_SP_LIMIT_Imin",  "length": 4, "type": "Real" },
+        {"offset": 34, "name": "M2S_SP_LIMIT_Imax",  "length": 4, "type": "Real" },
+        {"offset": 38, "name": "M2S_SP_BATT_R1",     "length": 4, "type": "Real" },
+        {"offset": 42, "name": "M2S_SP_BATT_R2",     "length": 4, "type": "Real" },
+        {"offset": 46, "name": "M2S_SP_BATT_R3",     "length": 4, "type": "Real" },
+        {"offset": 50, "name": "M2S_SP_BATT_R4",     "length": 4, "type": "Real" },
+        {"offset": 54, "name": "M2S_SP_BATT_C1",     "length": 4, "type": "Real" },
+        {"offset": 58, "name": "M2S_SP_REG_I_Filter","length": 4, "type": "Real" },
+        {"offset": 62, "name": "M2S_SP_REG_U0_A",    "length": 4, "type": "Real" },
         {"offset": 66, "nam:e": "M2S_SP_REG_KP_I",    "length": 4, "type": "Real"},
-        {"offset": 70, "name": "M2S_SP_REG_TN_I",    "length": 4, "type": "Real"},
-        {"offset": 74, "name": "M2S_SP_REG_KP_U",    "length": 4, "type": "Real"},
-        {"offset": 78, "name": "M2S_SP_REG_TN_U",    "length": 4, "type": "Real"},
+        {"offset": 70, "name": "M2S_SP_REG_TN_I",    "length": 4, "type": "Real" },
+        {"offset": 74, "name": "M2S_SP_REG_KP_U",    "length": 4, "type": "Real" },
+        {"offset": 78, "name": "M2S_SP_REG_TN_U",    "length": 4, "type": "Real" },
         {"offset": 82, "name": "M2S_SP_REG_KP_M",   "length": 4, "type": "Real"},
         {"offset": 86, "name": "M2S_SP_REG_TN_M",   "length": 4, "type": "Real"},
         {"offset": 90, "name": "M2S_SP_REG_U_Ramp", "length": 4, "type": "Real"},
         {"offset": 94, "name": "M2S_SP_REG_I_Ramp", "length": 4, "type": "Real"},
         {"offset": 98, "name": "M2S_SP_REG_ParSet", "length": 2, "type": "UINT"},
-        {"offset": 100,"name": "M2S_SP_REG_Mode",   "length": 2, "type": "UINT"}
-        {"offset": 102,"name": "M2S_SP_BATT_Model", "length": 2, "type": "UINT"}
-        {"offset": 104,"name": "M2S_RS_CW2",        "length": 2, "type": "UINT"}
-        {"offset": 106,"name": "M2S_SP_P",          "length": 4, "type": "UINT"}
-        {"offset": 110,"name": "M2S_SP_BATT_C2",    "length": 4, "type": "UINT"}
-        {"offset": 114,"name": "M2S_SP_BATT_L1",    "length": 4, "type": "UINT"}
-        {"offset": 118,"name": "M2S_SP_BATT_U0_B",  "length": 4, "type": "UINT"}
-        {"offset": 122,"name": "M2S_SP_RPL_LF_Mode","length": 2, "type": "UINT"}
-        {"offset": 124,"name": "M2S_SP_RPL_MF_Mode","length": 2, "type": "UINT"}
-        {"offset": 126,"name": "M2S_SP_RPL_LF_Hz",  "length": 4, "type": "UINT"}
-        {"offset": 130,"name": "M2S_SP_RPL_LF_U",   "length": 4, "type": "UINT"}
-        {"offset": 134,"name": "M2S_SP_RPL_MF_Hz",  "length": 2, "type": "UINT"}
-        {"offset": 136,"name": "M2S_SP_RPL_MF_I",   "length": 4, "type": "UINT"}
-        {"offset": 140,"name": "M2S_SP_RPL_MF_U",   "length": 4, "type": "UINT"}
-        {"offset": 144,"name": "M2S_SP_SOC_C_Nom",  "length": 4, "type": "UINT"}
-        {"offset": 148,"name": "M2S_SP_SOC_0",      "length": 4, "type": "UINT"}
+        {"offset": 100,"name": "M2S_SP_REG_Mode",   "length": 2, "type": "UINT"},
+        {"offset": 102,"name": "M2S_SP_BATT_Model", "length": 2, "type": "UINT"},
+        {"offset": 104,"name": "M2S_RS_CW2",        "length": 2, "type": "UINT"},
+        {"offset": 106,"name": "M2S_SP_P",          "length": 4, "type": "UINT"},
+        {"offset": 110,"name": "M2S_SP_BATT_C2",    "length": 4, "type": "UINT"},
+        {"offset": 114,"name": "M2S_SP_BATT_L1",    "length": 4, "type": "UINT"},
+        {"offset": 118,"name": "M2S_SP_BATT_U0_B",  "length": 4, "type": "UINT"},
+        {"offset": 122,"name": "M2S_SP_RPL_LF_Mode","length": 2, "type": "UINT"},
+        {"offset": 124,"name": "M2S_SP_RPL_MF_Mode","length": 2, "type": "UINT"},
+        {"offset": 126,"name": "M2S_SP_RPL_LF_Hz",  "length": 4, "type": "UINT"},
+        {"offset": 130,"name": "M2S_SP_RPL_LF_U",   "length": 4, "type": "UINT"},
+        {"offset": 134,"name": "M2S_SP_RPL_MF_Hz",  "length": 2, "type": "UINT"},
+        {"offset": 136,"name": "M2S_SP_RPL_MF_I",   "length": 4, "type": "UINT"},
+        {"offset": 140,"name": "M2S_SP_RPL_MF_U",   "length": 4, "type": "UINT"},
+        {"offset": 144,"name": "M2S_SP_SOC_C_Nom",  "length": 4, "type": "UINT"},
+        {"offset": 148,"name": "M2S_SP_SOC_0",      "length": 4, "type": "UINT"},
         {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
+
+        values = {
+                "M2S_RS_CW1":0,
+                "M2S_SP_U":0,
+                "M2S_SP_Imin":0,
+                "M2S_SP_Imax":0,
+                "M2S_SP_Umin":0,
+                "M2S_SP_Umax":0,
+                "M2S_SP_LIMIT_Umin":0,
+                "M2S_SP_LIMIT_Umax":0,
+                "M2S_SP_LIMIT_Imin":0,
+                "M2S_SP_LIMIT_Imax":0,
+                "M2S_SP_BATT_R1":0,
+                "M2S_SP_BATT_R2":0,
+                "M2S_SP_BATT_R3":0,
+                "M2S_SP_BATT_R4":0,
+                "M2S_SP_BATT_C1":0,
+                "M2S_SP_REG_I_Filter":0,
+                "M2S_SP_REG_U0_A":0,
+                "M2S_SP_REG_KP_I":0,
+                "M2S_SP_REG_TN_I":0,
+                "M2S_SP_REG_KP_U":0,
+                "M2S_SP_REG_TN_U":0,
+                "M2S_SP_REG_KP_M":0,
+                "M2S_SP_REG_TN_M":0,
+                "M2S_SP_REG_U_Ramp":0,
+                "M2S_SP_REG_I_Ramp":0,
+                "M2S_SP_REG_ParSet":0,
+                "M2S_SP_REG_Mode":0,
+                "M2S_SP_BATT_Model":0,
+                "M2S_RS_CW2":0,
+                "M2S_SP_P":0,
+                "M2S_SP_BATT_C2":0,
+                "M2S_SP_BATT_L1":0,
+                "M2S_SP_BATT_U0_B":0,
+                "M2S_SP_RPL_LF_Mode":0,
+                "M2S_SP_RPL_MF_Mode":0,
+                "M2S_SP_RPL_LF_Hz":0,
+                "M2S_SP_RPL_LF_U":0,
+                "M2S_SP_RPL_MF_Hz":0,
+                "M2S_SP_RPL_MF_I":0,
+                "M2S_SP_RPL_MF_U":0,
+                "M2S_SP_SOC_C_Nom":0,
+                "M2S_SP_SOC_0":0,
+                "M2S_RS_SOC_0":0 }
 
     def __init__(self, IP:str, port:str):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -100,164 +145,175 @@ class kratzer:
         self.mutex = Lock()
 
     def set_M2S_RS_CW1(self, new_value:int):
-        self.M2S_RS_CW1 = new_value
+        self.values["M2S_RS_CW1"] = new_value
 
     def set_M2S_M2S_SP_U(self, new_value:float):
-        self.M2S_M2S_SP_U = new_value
+        self.values["M2S_M2S_SP_U"] = new_value
 
     def set_M2S_M2S_SP_Imin(self, new_value:float):
-        self.M2S_M2S_SP_Imin = new_value
+        self.values["M2S_M2S_SP_Imin"] = new_value
 
     def set_M2S_M2S_SP_Imax(self, new_value:float):
-        self.M2S_M2S_SP_Imax = new_value
+        self.values["M2S_M2S_SP_Imax"] = new_value
 
     def set_M2S_M2S_SP_Umin(self, new_value:float):
-        self.M2S_M2S_SP_Umin = new_value
+        self.values["M2S_M2S_SP_Umin"] = new_value
 
     def set_M2S_M2S_SP_Umax (self, new_value:float):
-        self.M2S_M2S_SP_Umax = new_value
+        self.values["M2S_M2S_SP_Umax"] = new_value
 
     def set_M2S_M2S_SP_LIMIT_Umin(self, new_value:float):
-        self.M2S_M2S_SP_LIMIT_Umin = new_value
+        self.values["M2S_M2S_SP_LIMIT_Umin"] = new_value
 
     def set_M2S_M2S_SP_LIMIT_Umax(self, new_value:float):
-        self.M2S_M2S_SP_LIMIT_Umax = new_value
+        self.values["M2S_M2S_SP_LIMIT_Umax"] = new_value
 
     def set_M2S_M2S_SP_LIMIT_Imin(self, new_value:float):
-        self.M2S_M2S_SP_LIMIT_Imin = new_value
+        self.values["M2S_M2S_SP_LIMIT_Imin"] = new_value
 
     def set_M2S_M2S_SP_LIMIT_Imax(self, new_value:float):
-        self.M2S_M2S_SP_LIMIT_Imax = new_value
+        self.values["M2S_M2S_SP_LIMIT_Imax"] = new_value
 
     def set_M2S_M2S_SP_BATT_R1(self, new_value:float):
-        self.M2S_M2S_SP_BATT_R1 = new_value
+        self.values["M2S_M2S_SP_BATT_R1"] = new_value
 
     def set_M2S_M2S_SP_BATT_R2(self, new_value:float):
-        self.M2S_M2S_SP_BATT_R2 = new_value
+        self.values["M2S_M2S_SP_BATT_R2"] = new_value
 
     def set_M2S_M2S_SP_BATT_R3(self, new_value:float):
-        self.M2S_M2S_SP_BATT_R3 = new_value
+        self.values["M2S_M2S_SP_BATT_R3"] = new_value
 
     def set_M2S_M2S_SP_BATT_R4(self, new_value:float):
-        self.M2S_M2S_SP_BATT_R4 = new_value
+        self.values["M2S_M2S_SP_BATT_R4"] = new_value
 
     def set_M2S_M2S_SP_BATT_C1(self, new_value:float):
-        self.M2S_M2S_SP_BATT_C1 = new_value
+        self.values["M2S_M2S_SP_BATT_C1"] = new_value
 
     def set_M2S_M2S_SP_REG_I_Filter(self, new_value:float):
-        self.M2S_M2S_SP_REG_I_Filter = new_value
+        self.values["M2S_M2S_SP_REG_I_Filter"] = new_value
 
     def set_M2S_M2S_SP_REG_U0_A(self, new_value:float):
-        self.M2S_M2S_SP_REG_U0_A = new_value
+        self.values["M2S_M2S_SP_REG_U0_A"] = new_value
 
     def set_M2S_M2S_SP_REG_KP_I(self, new_value:float):
-        self.M2S_M2S_SP_REG_KP_I = new_value
+        self.values["M2S_M2S_SP_REG_KP_I"] = new_value
 
     def set_M2S_M2S_SP_REG_TN_I(self, new_value:float):
-        self.M2S_M2S_SP_REG_TN_I = new_value
+        self.values["M2S_M2S_SP_REG_TN_I"] = new_value
 
     def set_M2S_M2S_SP_REG_KP_U(self, new_value:float):
-        self.M2S_M2S_SP_REG_KP_U = new_value
+        self.values["M2S_M2S_SP_REG_KP_U"] = new_value
 
     def set_M2S_M2S_SP_REG_TN_U(self, new_value:float):
-        self.M2S_M2S_SP_REG_TN_U = new_value
+        self.values["M2S_M2S_SP_REG_TN_U"] = new_value
 
     def set_M2S_M2S_SP_REG_KP_M(self, new_value:float):
-        self.M2S_M2S_SP_REG_KP_M = new_value
+        self.values["M2S_M2S_SP_REG_KP_M"] = new_value
 
     def set_M2S_M2S_SP_REG_TN_M(self, new_value:float):
-        self.M2S_M2S_SP_REG_TN_M = new_value
+        self.values["M2S_M2S_SP_REG_TN_M"] = new_value
 
     def set_M2S_M2S_SP_REG_U_Ramp(self, new_value:float):
-        self.M2S_M2S_SP_REG_U_Ramp = new_value
+        self.values["M2S_M2S_SP_REG_U_Ramp"] = new_value
 
     def set_M2S_M2S_SP_REG_I_Ramp(self, new_value:float):
-        self.M2S_M2S_SP_REG_I_Ramp = new_value
+        self.values["M2S_M2S_SP_REG_I_Ramp"] = new_value
 
     def set_M2S_M2S_SP_REG_ParSet(self, new_value:int):
-        self.M2S_M2S_SP_REG_ParSet = new_value
+        self.values["M2S_M2S_SP_REG_ParSet"] = new_value
 
     def set_M2S_M2S_SP_REG_Mode(self, new_value:int):
-        self.M2S_M2S_SP_REG_Mode = new_value
+        self.values["M2S_M2S_SP_REG_Mode"] = new_value
 
     def set_M2S_M2S_SP_BATT_Model(self, new_value:int):
-        self.M2S_M2S_SP_BATT_Model = new_value
+        self.values["M2S_M2S_SP_BATT_Model"] = new_value
 
     def set_M2S_M2S_RS_CW2(self, new_value:int):
-        self.M2S_M2S_RS_CW2 = new_value
+        self.values["M2S_M2S_RS_CW2"] = new_value
 
     def set_M2S_M2S_SP_P(self, new_value:float):
-        self.M2S_M2S_SP_P = new_value
+        self.values["M2S_M2S_SP_P"] = new_value
 
     def set_M2S_M2S_SP_BATT_C2(self, new_value:float):
-        self.M2S_M2S_SP_BATT_C2 = new_value
+        self.values["M2S_M2S_SP_BATT_C2"] = new_value
 
     def set_M2S_M2S_SP_BATT_L1(self, new_value:float):
-        self.M2S_M2S_SP_BATT_L1 = new_value
+        self.values["M2S_M2S_SP_BATT_L1"] = new_value
 
     def set_M2S_M2S_SP_BATT_U0_B(self, new_value:float):
-        self.M2S_M2S_SP_BATT_U0_B = new_value
+        self.values["M2S_M2S_SP_BATT_U0_B"] = new_value
 
     def set_M2S_M2S_SP_RPL_LF_Mode(self, new_value:int):
-        self.M2S_M2S_SP_RPL_LF_Mode = new_value
+        self.values["M2S_M2S_SP_RPL_LF_Mode"] = new_value
 
     def set_M2S_M2S_SP_RPL_MF_Mode(self, new_value:int):
-        self.M2S_M2S_SP_RPL_MF_Mode = new_value
+        self.values["M2S_M2S_SP_RPL_MF_Mode"] = new_value
 
     def set_M2S_M2S_SP_RPL_LF_Hz(self, new_value:float):
-        self.M2S_M2S_SP_RPL_LF_Hz = new_value
+        self.values["M2S_M2S_SP_RPL_LF_Hz"] = new_value
 
     def set_M2S_M2S_SP_RPL_LF_U(self, new_value:float):
-        self.M2S_M2S_SP_RPL_LF_U = new_value
+        self.values["M2S_M2S_SP_RPL_LF_U"] = new_value
 
     def set_M2S_M2S_SP_RPL_MF_Hz(self, new_value:int):
-        self.M2S_M2S_SP_RPL_MF_Hz = new_value
+        self.values["M2S_M2S_SP_RPL_MF_Hz"] = new_value
 
     def set_M2S_M2S_SP_RPL_MF_I(self, new_value:float):
-        self.M2S_M2S_SP_RPL_MF_I = new_value
+        self.values["M2S_M2S_SP_RPL_MF_I"] = new_value
 
     def set_M2S_M2S_SP_RPL_MF_U(self, new_value:float):
-        self.M2S_M2S_SP_RPL_MF_U = new_value
+        self.values["M2S_M2S_SP_RPL_MF_U"] = new_value
 
     def set_M2S_M2S_SP_SOC_C_Nom(self, new_value:float):
-        self.M2S_M2S_SP_SOC_C_Nom = new_value
+        self.values["M2S_M2S_SP_SOC_C_Nom"] = new_value
 
     def set_M2S_M2S_SP_SOC_0(self, new_value:float):
-        self.M2S_M2S_SP_SOC_0 = new_value
+        self.values["M2S_M2S_SP_SOC_0"] = new_value
 
     def set_M2S_M2S_RS_SOC_0(self, new_value:int):
-        self.M2S_M2S_RS_SOC_0 = new_value
+        self.values["M2S_M2S_RS_SOC_0"] = new_value
+
 
     def send_package(self, message):
+        self.sock.sendto(self.encode_message(), (ip, port))
 
 
     def receive_package(self):
         message, sender = self.socket.recvfrom(142)
+        for line in message:
+            decode(message)
+        #what should be done with the received message?
+        #should it change the values of the varuables on the slave to master? or another action?
+        #return message
 
 
     def decode( message:bytearray, code:str ) -> list:
         result = {}
         for field in self.slave_to_master:
             if field["type"] == "Real":
-                decode_real(message[field["offset"] : field["offset"] + field["length"]])
+                decode_float(message[field["offset"] : field["offset"] + field["length"]])
             if field["type"] == "UINT":
-                decode_uint(message[field["offset"] : field["offset"] + field["length"]])
+                decode_unsigned_int(message[field["offset"] : field["offset"] + field["length"]])
             if field["type"] == "SINT":
-                decode_sint(message[field["offset"] : field["offset"] + field["length"]])
+                decode_signed_int(message[field["offset"] : field["offset"] + field["length"]])
          print("received message: %s" % data)
 
 
-    def decode_sint( message:bytearray ) -> int:
+    def encode_message():
+        pass
+
+
+    def decode_signed_int( message:bytearray ) -> int:
         # Assuming 16-bit signed integer
         return struct.unpack('<h', byte_array)[0]
 
 
-    def decode_uint( message:bytearray ) -> int:
+    def decode_unsigned_int( message:bytearray ) -> int:
         # Assuming 16-bit unsigned integer
         return struct.unpack('<H', byte_array)[0]
 
 
-    def decode_real( message:bytearray ) -> float:
+    def decode_float( message:bytearray ) -> float:
         # Assuming 32-bit float
         return struct.unpack('<f', byte_array)[0]
 
