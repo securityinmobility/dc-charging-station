@@ -107,7 +107,7 @@ class KratzerLowLevel:
             "S2M_SPV_LIMIT_Imin":0,
             "S2M_SPV_LIMIT_Imax":0,
             "S2M_AS_BATT_R1":0,
-            "VS2M_AS_BATT_R2":0,
+            "S2M_AS_BATT_R2":0,
             "S2M_AS_BATT_R3":0,
             "S2M_AS_BATT_R4":0,
             "S2M_AS_BATT_C1":0,
@@ -456,7 +456,7 @@ class KratzerLowLevel:
 
     def receive_package(self):
         package, sender = self.socket.recvfrom(142)
-        for line in master_to_slave:
+        for line in slave_to_master:
             message = package[ line['offset'] : line['offset'] + line['length'] ]
             if line["type"] == 'Real':
                 result = decode_float(message)
@@ -464,12 +464,7 @@ class KratzerLowLevel:
                 result = decode_unsigned_int(message)
             if line["type"] == 'SINT':
                 result = decode_signed_int(message)
-
-        #for line in message:
-        #    decode(message)
-        #what should be done with the received message?
-        #should it change the values of the varuables on the slave to master? or another action?
-        #return message
+            self.slave_to_master_values[line["name"]] = result
 
 
     def decode_signed_int(message:bytearray)->int:
