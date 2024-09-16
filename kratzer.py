@@ -2,13 +2,7 @@ import socket
 import struct
 
 
-#    'f'    # 4-byte float
-#    'H',    # 2-byte unsigned short
-#     'h', 2 byte signed int
-#    'i',    # 4-byte signed int
-#    'I',    # 4-byte unsigned int
-
-class kratzer:
+class KratzerLowLevel:
     slave_to_master = [
         { "name": "S2M_AS_SW1",         "offset": 0, "length": 2, "type": "UINT" },
         { "name": "S2M_AS_SW2",         "offset": 2, "length": 2, "type": "UINT" },
@@ -100,7 +94,52 @@ class kratzer:
         {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
 
-        values = {
+        slave_to_master_values = {
+            "S2M_AS_SW1":0,
+            "S2M_AS_SW2":0,
+            "S2M_AV_U":0,
+            "S2M_AV_I":0,
+            "S2M_AV_P":0,
+            "S2M_SPV_Umin":0,
+            "S2M_SPV_Umax":0,
+            "S2M_SPV_LIMIT_Umin":0,
+            "S2M_SPV_LIMIT_Umax":0,
+            "S2M_SPV_LIMIT_Imin":0,
+            "S2M_SPV_LIMIT_Imax":0,
+            "S2M_AS_BATT_R1":0,
+            "VS2M_AS_BATT_R2":0,
+            "S2M_AS_BATT_R3":0,
+            "S2M_AS_BATT_R4":0,
+            "S2M_AS_BATT_C1":0,
+            "S2M_AV_BATT_I_filter":0,
+            "S2M_AV_BATT_U0_A":0,
+            "S2M_AV_REG_KP_I":0,
+            "S2M_AV_REG_TN_I":0,
+            "S2M_AV_REG_KP_U":0,
+            "S2M_AV_REG_TN_U":0,
+            "S2M_AV_REG_KP_M":0,
+            "S2M_AV_REG_TN_M":0,
+            "S2M_AV_REG_U_ramp":0,
+            "S2M_AV_REG_I_ramp":0,
+            "S2M_AS_REG_ParSet":0,
+            "S2M_AS_REG_ParSet_Err":0,
+            "S2M_AV_REG_Mode":0,
+            "S2M_AS_BATT_Model":0,
+            "S2M_AS_ZR_Error_a":0,
+            "S2M_AS_ZR_Error_b":0,
+            "S2M_AS_UWR_Error_a":0,
+            "S2M_AS_UWR_error_b":0,
+            "S2M_AS_RK_Error_a":0,
+            "S2M_AS_RK_Error_b":0,
+            "S2M_AS_TSB_Error_a":0,
+            "S2M_AS_TSB_Error_b":0,
+            "S2M_AS_BATT_C2":0,
+            "S2M_AS_BATT_L1":0,
+            "S2M_AV_BATT_U0_B":0,
+            "S2M_AS_TSB_Error_c":0,
+            "S2M_AV_BATT_SOC":0 }
+
+        master_to_slave_values = {
                 "M2S_RS_CW1":0,
                 "M2S_SP_U":0,
                 "M2S_SP_Imin":0,
@@ -150,6 +189,137 @@ class kratzer:
         self.socket.bind((IP, port))
         self.mutex = Lock()
 
+
+    def get_S2M_AS_SW1(self) -> int|float:
+        return self.slave_to_master_values["S2M_AS_SW1"]
+
+    def get_S2M_AS_SW2(self):
+        return self.slave_to_master["S2M_AS_SW2"]
+
+    def get_S2M_AV_U(self):
+        return self.slave_to_master["S2M_AV_U"]
+
+    def get_S2M_AV_I(self):
+        return self.slave_to_master["S2M_AV_I"]
+
+    def get_S2M_AV_P(self):
+        return self.slave_to_master["S2M_AV_P"]
+
+    def get_S2M_SPV_Umin(self):
+        return self.slave_to_master["S2M_SPV_Umin"]
+
+    def get_S2M_SPV_Umax(self):
+        return self.slave_to_master["S2M_SPV_Umax"]
+
+    def get_S2M_SPV_LIMIT_Umin(self):
+        return self.slave_to_master["S2M_SPV_LIMIT_Umin"]
+
+    def get_S2M_SPV_LIMIT_Umax(self):
+        return self.slave_to_master["S2M_SPV_LIMIT_Umax"]
+
+    def get_S2M_SPV_LIMIT_Imin(self):
+        return self.slave_to_master["S2M_SPV_LIMIT_Imin"]
+
+    def get_S2M_SPV_LIMIT_Imax(self):
+        return self.slave_to_master["S2M_SPV_LIMIT_Imax"]
+
+    def get_S2M_AS_BATT_R1(self):
+        return self.slave_to_master["S2M_AS_BATT_R1"]
+
+    def get_VS2M_AS_BATT_R2(self):
+        return self.slave_to_master["VS2M_AS_BATT_R2"]
+
+    def get_S2M_AS_BATT_R3(self):
+        return self.slave_to_master["S2M_AS_BATT_R3"]
+
+    def get_S2M_AS_BATT_R4(self):
+        return self.slave_to_master["S2M_AS_BATT_R4"]
+
+    def get_S2M_AS_BATT_C1(self):
+        return self.slave_to_master["S2M_AS_BATT_C1"]
+
+    def get_S2M_AV_BATT_I_filter(self):
+        return self.slave_to_master["S2M_AV_BATT_I_filter"]
+
+    def get_S2M_AV_BATT_U0_A(self):
+        return self.slave_to_master["S2M_AV_BATT_U0_A"]
+
+    def get_S2M_AV_REG_KP_I(self):
+        return self.slave_to_master["S2M_AV_REG_KP_I"]
+
+    def get_S2M_AV_REG_TN_I(self):
+        return self.slave_to_master["S2M_AV_REG_TN_I"]
+
+    def get_S2M_AV_REG_KP_U(self):
+        return self.slave_to_master["S2M_AV_REG_KP_U"]
+
+    def get_S2M_AV_REG_TN_U(self):
+        return self.slave_to_master["S2M_AV_REG_TN_U"]
+
+    def get_S2M_AV_REG_KP_M(self):
+        return self.slave_to_master["S2M_AV_REG_KP_M"]
+
+    def get_S2M_AV_REG_TN_M(self):
+        return self.slave_to_master["S2M_AV_REG_TN_M"]
+
+    def get_S2M_AV_REG_U_ramp(self):
+        return self.slave_to_master["S2M_AV_REG_U_ramp"]
+
+    def get_S2M_AV_REG_I_ramp(self):
+        return self.slave_to_master["S2M_AV_REG_I_ramp"]
+
+    def get_S2M_AS_REG_ParSet(self):
+        return self.slave_to_master["S2M_AS_REG_ParSet"]
+
+    def get_S2M_AS_REG_ParSet_Err(self):
+        return self.slave_to_master["S2M_AS_REG_ParSet_Err"]
+
+    def get_S2M_AV_REG_Mode(self):
+        return self.slave_to_master["S2M_AV_REG_Mode"]
+
+    def get_S2M_AS_BATT_Model(self):
+        return self.slave_to_master["S2M_AS_BATT_Model"]
+
+    def get_S2M_AS_ZR_Error_a(self):
+        return self.slave_to_master["S2M_AS_ZR_Error_a"]
+
+    def get_S2M_AS_ZR_Error_b(self):
+        return self.slave_to_master["S2M_AS_ZR_Error_b"]
+
+    def get_S2M_AS_UWR_Error_a(self):
+        return self.slave_to_master["S2M_AS_UWR_Error_a"]
+
+    def get_S2M_AS_UWR_error_b(self):
+        return self.slave_to_master["S2M_AS_UWR_error_b"]
+
+    def get_S2M_AS_RK_Error_a(self):
+        return self.slave_to_master["S2M_AS_RK_Error_a"]
+
+    def get_S2M_AS_RK_Error_b(self):
+        return self.slave_to_master["S2M_AS_RK_Error_b"]
+
+    def get_S2M_AS_TSB_Error_a(self):
+        return self.slave_to_master["S2M_AS_TSB_Error_a"]
+
+    def get_S2M_AS_TSB_Error_b(self):
+        return self.slave_to_master["S2M_AS_TSB_Error_b"]
+
+    def get_S2M_AS_BATT_C2(self):
+        return self.slave_to_master["S2M_AS_BATT_C2"]
+
+    def get_S2M_AS_BATT_L1(self):
+        return self.slave_to_master["S2M_AS_BATT_L1"]
+
+    def get_S2M_AV_BATT_U0_B(self):
+        return self.slave_to_master["S2M_AV_BATT_U0_B"]
+
+    def get_S2M_AS_TSB_Error_c(self):
+        return self.slave_to_master["S2M_AS_TSB_Error_c"]
+
+    def get_S2M_AV_BATT_SOC(self):
+        return self.slave_to_master["S2M_AV_BATT_SOC"]
+
+
     def set_M2S_RS_CW1(self, new_value:int):
         self.values["M2S_RS_CW1"] = new_value
 
@@ -165,7 +335,7 @@ class kratzer:
     def set_M2S_M2S_SP_Umin(self, new_value:float):
         self.values["M2S_M2S_SP_Umin"] = new_value
 
-    def set_M2S_M2S_SP_Umax (self, new_value:float):
+    def set_M2S_M2S_SP_Umax(self, new_value:float):
         self.values["M2S_M2S_SP_Umax"] = new_value
 
     def set_M2S_M2S_SP_LIMIT_Umin(self, new_value:float):
@@ -285,29 +455,42 @@ class kratzer:
 
 
     def receive_package(self):
-        message, sender = self.socket.recvfrom(142)
-        for line in message:
-            decode(message)
+        package, sender = self.socket.recvfrom(142)
+        for line in master_to_slave:
+            message = package[ line['offset'] : line['offset'] + line['length'] ]
+            if line["type"] == 'Real':
+                result = decode_float(message)
+            if line["type"] == 'UINT':
+                result = decode_unsigned_int(message)
+            if line["type"] == 'SINT':
+                result = decode_signed_int(message)
+
+        #for line in message:
+        #    decode(message)
         #what should be done with the received message?
         #should it change the values of the varuables on the slave to master? or another action?
         #return message
 
 
-    def decode( message:bytearray, code:str ) -> list:
-        result = {}
-        for field in self.slave_to_master:
-            if field["type"] == "Real":
-                decode_float(message[field["offset"] : field["offset"] + field["length"]])
-            if field["type"] == "UINT":
-                decode_unsigned_int(message[field["offset"] : field["offset"] + field["length"]])
-            if field["type"] == "SINT":
-                decode_signed_int(message[field["offset"] : field["offset"] + field["length"]])
-         print("received message: %s" % data)
+    def decode_signed_int(message:bytearray)->int:
+        if(len(message) == 4):
+            return struct.unpack('<i', byte_array)[0]
+        return struct.unpack('<h', byte_array)[0]
 
 
-    def build_message(self) -> bytearray:
+    def decode_unsigned_int(message:bytearray)->int:
+        if(len(message) == 4):
+            return struct.unpack('<I', byte_array)[0]
+        return struct.unpack('<H', byte_array)[0]
+
+
+    def decode_float(message:bytearray)->float:
+        return struct.unpack('<f', byte_array)[0]
+
+
+    def build_message(self)->bytearray:
         result = bytearray()
-        for line in master_to_slave:
+        for line in slave_to_master:
             if line["length"] == 4:
                 if line ["type"] == "UINT" :
                     encoded = struct.pack('I', number)
@@ -324,31 +507,6 @@ class kratzer:
         return result
 
 
-    def encode_message( self, number_of_bytes:int, code:str, value:int ):
-#    'f'    # 4-byte float
-#    'H',    # 2-byte unsigned short
-#    'i',    # 4-byte signed int
-#    'I',    # 4-byte unsigned int
-#     'h', 2 byte signed int
-        pass
-
-
-    def decode_signed_int( message:bytearray ) -> int:
-        if(len(message == 4):
-            return struct.unpack('<i', byte_array)[0]
-        else:
-            return struct.unpack('<h', byte_array)[0]
-
-
-    def decode_unsigned_int( message:bytearray ) -> int:
-        if(len(message == 4):
-            return struct.unpack('<I', byte_array)[0]
-        else:
-            return struct.unpack('<H', byte_array)[0]
-
-
-    def decode_float( message:bytearray ) -> float:
-        return struct.unpack('<f', byte_array)[0]
-
+    def send_message(self):
 
 
