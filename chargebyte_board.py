@@ -175,7 +175,7 @@ class ChargebyteBoard:
         """ This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor
         """
 
-        self.socketend_packet(0x01, bytearray())
+        self.send_packet(0x01, bytearray())
         response = self.get_response(0x01)
         self.check_response_length(response,3)
         software_version = response[0]
@@ -188,7 +188,7 @@ class ChargebyteBoard:
         """This service gives access to reset causes (i.e. why the coprocessor restarted) as well as the software build number
         """
 
-        self.socketend_packet(0x04, bytearray())
+        self.send_packet(0x04, bytearray())
         response = self.get_response(0x04)
         self.check_response_length(response,3)
         build = self.join_bytes(response[0],response[1])
@@ -200,7 +200,7 @@ class ChargebyteBoard:
         """ The pulse width of the PWM signal can be read by sending the device-get PWM service.
         """
 
-        self.socketend_packet(0x10, bytearray())
+        self.send_packet(0x10, bytearray())
         response = self.get_response(0x10)
         self.check_response_length(response,4)
         frequency = self.join_bytes(response[0],response[1])
@@ -216,7 +216,7 @@ class ChargebyteBoard:
         high_freq = (frequency >> 8) & 0xff
         low_duty = dutycycle & 0xff
         high_duty =  (dutycycle >> 8) & 0xff
-        self.socketend_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
+        self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
         response = self.get_response(0x11)
         self.check_response_length(response,1)
         return ControlPWM(response[0])
@@ -226,7 +226,7 @@ class ChargebyteBoard:
         """ The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control.
         """
 
-        self.socketend_packet(0x12, bytearray([control_code]))
+        self.send_packet(0x12, bytearray([control_code]))
         response = self.get_response(0x12)
         self.check_response_length(response,1)
         return StatusPWMGeneration(response[0])
@@ -237,7 +237,7 @@ class ChargebyteBoard:
         Device-Get-Ucp is the request for the control pilot (CP) voltage. Due to the fact that the voltage is changing with 1 kHz, the highest and lowest voltage value will be measured. The data resolution is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit. The corresponding request and response are given in the tables below.
         """
 
-        self.socketend_packet(0x14, bytearray())
+        self.send_packet(0x14, bytearray())
         response = self.get_response(0x14)
         self.check_response_length(response,4)
         positive_cp = self.join_bytes(response[0], response[1])
@@ -252,7 +252,7 @@ class ChargebyteBoard:
         The parameter resistance is defined only by the 3 LSB bits.
         """
 
-        self.socketend_packet(0x15, bytearray([resistance]))
+        self.send_packet(0x15, bytearray([resistance]))
         response = self.get_response(0x15)
         self.check_response_length(response,1)
         return int(response[0])
@@ -261,7 +261,7 @@ class ChargebyteBoard:
     def lock_unlock_cable_one( self, command:ControlCode ) -> LockStatus:
         """The device supports two separate locks for locking the charging sockets.
         """
-        self.socketend_packet(0x17, bytearray([command]))
+        self.send_packet(0x17, bytearray([command]))
         response = self.get_response(0x17)
         self.check_response_length(response,1)
         return LockStatus(response[0])
@@ -277,7 +277,7 @@ class ChargebyteBoard:
         The motor fault service could be used to get more information about failures.
         """
 
-        self.socketend_packet(0x18, bytearray([command]))
+        self.send_packet(0x18, bytearray([command]))
         response = self.get_response(0x18)
         self.check_response_length(response,1)
         return LockStatus(response[0])
@@ -293,7 +293,7 @@ class ChargebyteBoard:
         Return Value: The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
         """
 
-        self.socketend_packet(0x1A, bytearray())
+        self.send_packet(0x1A, bytearray())
         response = self.get_response(0x1A)
         self.check_response_length(response,1)
         response = response[0]
@@ -309,7 +309,7 @@ class ChargebyteBoard:
 The data resolution of the measured voltages is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit.
         """
 
-        self.socketend_packet(0x20, bytearray([interval]))
+        self.send_packet(0x20, bytearray([interval]))
         response = self.get_response(0x20)
         self.check_response_length(response,1)
         return StatusCode(response[0])
@@ -334,7 +334,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
 
         if parameter > 255 or parameter < 1:
             raise ValueError('This parameter is defined between 1 and 255!')
-        self.socketend_packet(0x31, bytearray([parameter]))
+        self.send_packet(0x31, bytearray([parameter]))
         response = self.get_response(0x31)
         self.check_response_length(response,1)
         return ErrorCode(response[0])
@@ -345,8 +345,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
 
         No direct response is sent, we may wait for the first message on Device initialization to double check the reset was performed. The POR message on initialization is currently set to zero.
         """
-
-        self.socketend_packet(0x33, bytearray())
+        self.send_packet(0x33, bytearray())
         #response = self.get_response(0x33)
         #self.check_response_length(response,1)
         #return response[0]
@@ -356,7 +355,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         """This service enables or disables resistors that load the proximity signal. These resistors are switched between proximity and GND.
         """
 
-        self.socketend_packet(0x50, bytearray([control]))
+        self.send_packet(0x50, bytearray([control]))
         response = self.get_response(0x50)
         self.check_response_length(response,1)
         return ErrorCode(response[0])
@@ -367,7 +366,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         Control=0 deactivates the pullup, all other values activate the pullup
         """
 
-        response = self.socketend_packet(0x51, bytearray([0x03]))
+        self.send_packet(0x51, bytearray([0x03]))
         response = self.get_response(0x51)
         self.check_response_length(response,1)
         return response[0]
@@ -377,7 +376,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup.
         """
 
-        self.socketend_packet(0x51, bytearray([0x00]))
+        self.send_packet(0x51, bytearray([0x00]))
         response = self.get_response(0x51)
         self.check_response_length(response,1)
         return response[0]
@@ -389,7 +388,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         return value: is the voltage.
         """
 
-        self.socketend_packet(0x52, bytearray())
+        self.send_packet(0x52, bytearray())
         response = self.get_response(0x52)
         self.check_response_length(response,2)
         byte_voltage = self.join_bytes(response[0], response[1])
