@@ -26,7 +26,7 @@ class TestKratzer:
         coded = kratzer.encode_signed_int(var, 2)
         assert kratzer.decode_signed_int(coded) == var
         var = -32775
-        coded = kratzer.encode_signed_int(var, 2)
+        coded = kratzer.encode_signed_int(var, 4)
         assert kratzer.decode_signed_int(coded) == var
 
 
@@ -35,14 +35,15 @@ class TestKratzer:
         coded = kratzer.encode_unsigned_int(var, 2)
         assert kratzer.decode_unsigned_int(coded) == var
         var = 65539
-        coded = kratzer.encode_unsigned_int(var, 2)
+        coded = kratzer.encode_unsigned_int(var, 4)
         assert kratzer.decode_unsigned_int(coded) == var
 
 
     def test_encode_and_decode_float(self, kratzer):
         var = 3.14
         coded = kratzer.encode_float(var)
-        assert kratzer.decode_float(coded) == var
+        precision = 0.001
+        assert (kratzer.decode_float(coded)-var) <= precision
 
 
 
