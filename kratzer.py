@@ -1,6 +1,7 @@
 import socket
 import struct
-
+from threading import Thread, Lock
+import threading
 
 class KratzerLowLevel:
     slave_to_master = [
@@ -66,7 +67,7 @@ class KratzerLowLevel:
         {"offset": 54, "name": "M2S_SP_BATT_C1",     "length": 4, "type": "Real" },
         {"offset": 58, "name": "M2S_SP_REG_I_Filter","length": 4, "type": "Real" },
         {"offset": 62, "name": "M2S_SP_REG_U0_A",    "length": 4, "type": "Real" },
-        {"offset": 66, "nam:e": "M2S_SP_REG_KP_I",    "length": 4, "type": "Real"},
+        {"offset": 66, "name": "M2S_SP_REG_KP_I",    "length": 4, "type": "Real"},
         {"offset": 70, "name": "M2S_SP_REG_TN_I",    "length": 4, "type": "Real" },
         {"offset": 74, "name": "M2S_SP_REG_KP_U",    "length": 4, "type": "Real" },
         {"offset": 78, "name": "M2S_SP_REG_TN_U",    "length": 4, "type": "Real" },
@@ -93,101 +94,104 @@ class KratzerLowLevel:
         {"offset": 148,"name": "M2S_SP_SOC_0",      "length": 4, "type": "UINT"},
         {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
+    slave_to_master_values = {
+        "S2M_AS_SW1":0,
+        "S2M_AS_SW2":0,
+        "S2M_AV_U":0,
+        "S2M_AV_I":0,
+        "S2M_AV_P":0,
+        "S2M_SPV_Umin":0,
+        "S2M_SPV_Umax":0,
+        "S2M_SPV_LIMIT_Umin":0,
+        "S2M_SPV_LIMIT_Umax":0,
+        "S2M_SPV_LIMIT_Imin":0,
+        "S2M_SPV_LIMIT_Imax":0,
+        "S2M_AS_BATT_R1":0,
+        "VS2M_AS_BATT_R2":0,
+        "S2M_AS_BATT_R2":0,
+        "S2M_AS_BATT_R3":0,
+        "S2M_AS_BATT_R4":0,
+        "S2M_AS_BATT_C1":0,
+        "S2M_AV_BATT_I_filter":0,
+        "S2M_AV_BATT_U0_A":0,
+        "S2M_AV_REG_KP_I":0,
+        "S2M_AV_REG_TN_I":0,
+        "S2M_AV_REG_KP_U":0,
+        "S2M_AV_REG_TN_U":0,
+        "S2M_AV_REG_KP_M":0,
+        "S2M_AV_REG_TN_M":0,
+        "S2M_AV_REG_U_ramp":0,
+        "S2M_AV_REG_I_ramp":0,
+        "S2M_AS_REG_ParSet":0,
+        "S2M_AS_REG_ParSet_Err":0,
+        "S2M_AV_REG_Mode":0,
+        "S2M_AS_BATT_Model":0,
+        "S2M_AS_ZR_Error_a":0,
+        "S2M_AS_ZR_Error_b":0,
+        "S2M_AS_UWR_Error_a":0,
+        "S2M_AS_UWR_error_b":0,
+        "S2M_AS_RK_Error_a":0,
+        "S2M_AS_RK_Error_b":0,
+        "S2M_AS_TSB_Error_a":0,
+        "S2M_AS_TSB_Error_b":0,
+        "S2M_AS_BATT_C2":0,
+        "S2M_AS_BATT_L1":0,
+        "S2M_AV_BATT_U0_B":0,
+        "S2M_AS_TSB_Error_c":0,
+        "S2M_AV_BATT_SOC":0 }
 
-        slave_to_master_values = {
-            "S2M_AS_SW1":0,
-            "S2M_AS_SW2":0,
-            "S2M_AV_U":0,
-            "S2M_AV_I":0,
-            "S2M_AV_P":0,
-            "S2M_SPV_Umin":0,
-            "S2M_SPV_Umax":0,
-            "S2M_SPV_LIMIT_Umin":0,
-            "S2M_SPV_LIMIT_Umax":0,
-            "S2M_SPV_LIMIT_Imin":0,
-            "S2M_SPV_LIMIT_Imax":0,
-            "S2M_AS_BATT_R1":0,
-            "S2M_AS_BATT_R2":0,
-            "S2M_AS_BATT_R3":0,
-            "S2M_AS_BATT_R4":0,
-            "S2M_AS_BATT_C1":0,
-            "S2M_AV_BATT_I_filter":0,
-            "S2M_AV_BATT_U0_A":0,
-            "S2M_AV_REG_KP_I":0,
-            "S2M_AV_REG_TN_I":0,
-            "S2M_AV_REG_KP_U":0,
-            "S2M_AV_REG_TN_U":0,
-            "S2M_AV_REG_KP_M":0,
-            "S2M_AV_REG_TN_M":0,
-            "S2M_AV_REG_U_ramp":0,
-            "S2M_AV_REG_I_ramp":0,
-            "S2M_AS_REG_ParSet":0,
-            "S2M_AS_REG_ParSet_Err":0,
-            "S2M_AV_REG_Mode":0,
-            "S2M_AS_BATT_Model":0,
-            "S2M_AS_ZR_Error_a":0,
-            "S2M_AS_ZR_Error_b":0,
-            "S2M_AS_UWR_Error_a":0,
-            "S2M_AS_UWR_error_b":0,
-            "S2M_AS_RK_Error_a":0,
-            "S2M_AS_RK_Error_b":0,
-            "S2M_AS_TSB_Error_a":0,
-            "S2M_AS_TSB_Error_b":0,
-            "S2M_AS_BATT_C2":0,
-            "S2M_AS_BATT_L1":0,
-            "S2M_AV_BATT_U0_B":0,
-            "S2M_AS_TSB_Error_c":0,
-            "S2M_AV_BATT_SOC":0 }
+    master_to_slave_values = {
+            "M2S_RS_CW1":0,
+            "M2S_SP_U":0,
+            "M2S_SP_Imin":0,
+            "M2S_SP_Imax":0,
+            "M2S_SP_Umin":0,
+            "M2S_SP_Umax":0,
+            "M2S_SP_LIMIT_Umin":0,
+            "M2S_SP_LIMIT_Umax":0,
+            "M2S_SP_LIMIT_Imin":0,
+            "M2S_SP_LIMIT_Imax":0,
+            "M2S_SP_BATT_R1":0,
+            "M2S_SP_BATT_R2":0,
+            "M2S_SP_BATT_R3":0,
+            "M2S_SP_BATT_R4":0,
+            "M2S_SP_BATT_C1":0,
+            "M2S_SP_REG_I_Filter":0,
+            "M2S_SP_REG_U0_A":0,
+            "M2S_SP_REG_KP_I":0,
+            "M2S_SP_REG_TN_I":0,
+            "M2S_SP_REG_KP_U":0,
+            "M2S_SP_REG_TN_U":0,
+            "M2S_SP_REG_KP_M":0,
+            "M2S_SP_REG_TN_M":0,
+            "M2S_SP_REG_U_Ramp":0,
+            "M2S_SP_REG_I_Ramp":0,
+            "M2S_SP_REG_ParSet":0,
+            "M2S_SP_REG_Mode":0,
+            "M2S_SP_BATT_Model":0,
+            "M2S_RS_CW2":0,
+            "M2S_SP_P":0,
+            "M2S_SP_BATT_C2":0,
+            "M2S_SP_BATT_L1":0,
+            "M2S_SP_BATT_U0_B":0,
+            "M2S_SP_RPL_LF_Mode":0,
+            "M2S_SP_RPL_MF_Mode":0,
+            "M2S_SP_RPL_LF_Hz":0,
+            "M2S_SP_RPL_LF_U":0,
+            "M2S_SP_RPL_MF_Hz":0,
+            "M2S_SP_RPL_MF_I":0,
+            "M2S_SP_RPL_MF_U":0,
+            "M2S_SP_SOC_C_Nom":0,
+            "M2S_SP_SOC_0":0,
+            "M2S_RS_SOC_0":0 }
 
-        master_to_slave_values = {
-                "M2S_RS_CW1":0,
-                "M2S_SP_U":0,
-                "M2S_SP_Imin":0,
-                "M2S_SP_Imax":0,
-                "M2S_SP_Umin":0,
-                "M2S_SP_Umax":0,
-                "M2S_SP_LIMIT_Umin":0,
-                "M2S_SP_LIMIT_Umax":0,
-                "M2S_SP_LIMIT_Imin":0,
-                "M2S_SP_LIMIT_Imax":0,
-                "M2S_SP_BATT_R1":0,
-                "M2S_SP_BATT_R2":0,
-                "M2S_SP_BATT_R3":0,
-                "M2S_SP_BATT_R4":0,
-                "M2S_SP_BATT_C1":0,
-                "M2S_SP_REG_I_Filter":0,
-                "M2S_SP_REG_U0_A":0,
-                "M2S_SP_REG_KP_I":0,
-                "M2S_SP_REG_TN_I":0,
-                "M2S_SP_REG_KP_U":0,
-                "M2S_SP_REG_TN_U":0,
-                "M2S_SP_REG_KP_M":0,
-                "M2S_SP_REG_TN_M":0,
-                "M2S_SP_REG_U_Ramp":0,
-                "M2S_SP_REG_I_Ramp":0,
-                "M2S_SP_REG_ParSet":0,
-                "M2S_SP_REG_Mode":0,
-                "M2S_SP_BATT_Model":0,
-                "M2S_RS_CW2":0,
-                "M2S_SP_P":0,
-                "M2S_SP_BATT_C2":0,
-                "M2S_SP_BATT_L1":0,
-                "M2S_SP_BATT_U0_B":0,
-                "M2S_SP_RPL_LF_Mode":0,
-                "M2S_SP_RPL_MF_Mode":0,
-                "M2S_SP_RPL_LF_Hz":0,
-                "M2S_SP_RPL_LF_U":0,
-                "M2S_SP_RPL_MF_Hz":0,
-                "M2S_SP_RPL_MF_I":0,
-                "M2S_SP_RPL_MF_U":0,
-                "M2S_SP_SOC_C_Nom":0,
-                "M2S_SP_SOC_0":0,
-                "M2S_RS_SOC_0":0 }
 
     def __init__(self, IP:str, port:str):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((IP, port))
-        self.mutex = Lock()
+        self.mutex = threading.Lock()
+        self.ip = IP
+        self.port = port
 
 
     def get_S2M_AS_SW1(self) -> int|float:
@@ -319,7 +323,6 @@ class KratzerLowLevel:
     def get_S2M_AV_BATT_SOC(self):
         return self.slave_to_master["S2M_AV_BATT_SOC"]
 
-
     def set_M2S_RS_CW1(self, new_value:int):
         self.values["M2S_RS_CW1"] = new_value
 
@@ -450,8 +453,8 @@ class KratzerLowLevel:
         self.values["M2S_M2S_RS_SOC_0"] = new_value
 
 
-    def send_package(self, message):
-        self.sock.sendto(self.encode_message(), (ip, port))
+    def send_package(self):
+        self.sock.sendto(self.build_message(), (self.ip, self.port))
 
 
     def receive_package(self):
@@ -467,41 +470,52 @@ class KratzerLowLevel:
             self.slave_to_master_values[line["name"]] = result
 
 
-    def decode_signed_int(message:bytearray)->int:
+    def decode_signed_int(self, message:bytearray)->int:
         if(len(message) == 4):
-            return struct.unpack('<i', byte_array)[0]
-        return struct.unpack('<h', byte_array)[0]
+            return struct.unpack('i', message)[0]
+        return struct.unpack('h', message)[0]
 
 
-    def decode_unsigned_int(message:bytearray)->int:
+    def decode_unsigned_int(self, message:bytearray)->int:
         if(len(message) == 4):
-            return struct.unpack('<I', byte_array)[0]
-        return struct.unpack('<H', byte_array)[0]
+            return struct.unpack('I', message)[0]
+        return struct.unpack('H', message)[0]
 
 
-    def decode_float(message:bytearray)->float:
-        return struct.unpack('<f', byte_array)[0]
+    def decode_float(self, message:bytearray)->float:
+        return struct.unpack('f', message)[0]
 
 
     def build_message(self)->bytearray:
         result = bytearray()
-        for line in slave_to_master:
-            if line["length"] == 4:
-                if line ["type"] == "UINT" :
-                    encoded = struct.pack('I', number)
-                elif line["type"] == "SINT":
-                    encoded = struct.pack('i', number)
-                elif line["type"] == "Real":
-                    encoded = struct.pack('f', number)
-            else:
-                if line ["type"] == "UINT" :
-                    encoded = struct.pack('H', number)
-                elif line["type"] == "SINT":
-                    encoded = struct.pack('h', number)
+        for line in self.master_to_slave:
+            if line ["type"] == "UINT" :
+                encoded = self.encode_unsigned_int(self.master_to_slave_values[line['name']], line["length"])
+            elif line["type"] == "SINT":
+                encoded = self.encode_signed_int(self.master_to_slave_values[line['name']], line["length"])
+            elif line["type"] == "Real":
+                encoded = self.encode_float(self.master_to_slave_values[line['name']])
             result.extend(encoded)
         return result
 
 
-    def send_message(self):
+    def encode_signed_int(self, message:int, length:int)->bytearray:
+        if length == 4:
+            return struct.pack('i', message)
+        if length == 2:
+            return struct.pack('h', message)
+
+
+    def encode_unsigned_int(self, message:int, length:int)->bytearray:
+        if length == 4:
+            return struct.pack('I', message)
+        if length == 2:
+            return struct.pack('H', message)
+
+
+    def encode_float(self, message:float)->bytearray:
+        return struct.pack('f', message)
+
+
 
 

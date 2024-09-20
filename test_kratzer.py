@@ -1,5 +1,6 @@
 from kratzer import *
 import pytest
+from unittest import mock
 
 # 2-byte (16-bit) integers:
 # 'h' - short integer
@@ -13,14 +14,22 @@ import pytest
 
 
 @pytest.fixture()
-def kratzer():
-    kratzer = KratzerLowLevel("0.0.0.0", 0)
+def kratzer(mocker, mock_socket):
+    host = socket.gethostname()
+    port = 4040  # The port used by the server
+    mocker.patch('socket.socket', return_value = mock_socket)
+    kratzer = KratzerLowLevel(host, port)
     return kratzer
 
 
+@pytest.fixture()
+def mock_socket():
+    mock_socket = mock.Mock()
+    mock_socket.recv = mock.Mock()
+    return mock_socket
+
+
 class TestKratzer:
-
-
     def test_encode_and_decode_signed_int(self, kratzer):
         var = -16
         coded = kratzer.encode_signed_int(var, 2)
@@ -46,5 +55,15 @@ class TestKratzer:
         assert (kratzer.decode_float(coded)-var) <= precision
 
 
+    def test_build_message(self, kratzer):
+        message = kratzer.build_message()
+        assert len(message) == 154
 
+
+    def test_send_package(self, kratzer):
+        pass
+
+
+    def test_receive_package(self, kratzer):
+        pass
 
