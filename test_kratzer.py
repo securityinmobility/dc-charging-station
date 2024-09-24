@@ -16,9 +16,8 @@ from unittest import mock
 @pytest.fixture()
 def kratzer(mocker, mock_socket):
     host = socket.gethostname()
-    port = 4040  # The port used by the server
     mocker.patch('socket.socket', return_value = mock_socket)
-    kratzer = KratzerLowLevel(host, port)
+    kratzer = KratzerLowLevel(host)
     return kratzer
 
 

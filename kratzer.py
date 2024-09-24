@@ -3,6 +3,7 @@ import struct
 from threading import Thread, Lock
 import threading
 
+
 class KratzerLowLevel:
     slave_to_master = [
         { "name": "S2M_AS_SW1",         "offset": 0, "length": 2, "type": "UINT" },
@@ -94,6 +95,7 @@ class KratzerLowLevel:
         {"offset": 148,"name": "M2S_SP_SOC_0",      "length": 4, "type": "UINT"},
         {"offset": 152,"name": "M2S_RS_SOC_0",      "length": 2, "type": "UINT"}
         ]
+
     slave_to_master_values = {
         "S2M_AS_SW1":0,
         "S2M_AS_SW2":0,
@@ -185,14 +187,15 @@ class KratzerLowLevel:
             "M2S_SP_SOC_0":0,
             "M2S_RS_SOC_0":0 }
 
-
-    def __init__(self, IP:str, port:str):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind((IP, port))
+    def __init__(self, IP:str):
+        port_STM = 5000
+        port_MTS = 5100
+        self.socket_STM = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket_STM.bind((IP, port_STM))
+        self.socket_MTS = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket_MTS.bind((IP, port_MTS))
         self.mutex = threading.Lock()
         self.ip = IP
-        self.port = port
-
 
     def get_S2M_AS_SW1(self) -> int|float:
         return self.slave_to_master_values["S2M_AS_SW1"]
@@ -402,6 +405,9 @@ class KratzerLowLevel:
         self.values["M2S_M2S_SP_REG_ParSet"] = new_value
 
     def set_M2S_M2S_SP_REG_Mode(self, new_value:int):
+        #0, 1, 2, 3, 4, 6, 9, 10
+        #4, 6 = Stromregelung
+        #0-3, 9, 10 = Spannungsregelung
         self.values["M2S_M2S_SP_REG_Mode"] = new_value
 
     def set_M2S_M2S_SP_BATT_Model(self, new_value:int):
@@ -458,7 +464,7 @@ class KratzerLowLevel:
 
 
     def receive_package(self):
-        package, sender = self.socket.recvfrom(142)
+        package, sender = self.socket_STM.recvfrom(142)
         for line in slave_to_master:
             message = package[ line['offset'] : line['offset'] + line['length'] ]
             if line["type"] == 'Real':
@@ -515,6 +521,19 @@ class KratzerLowLevel:
 
     def encode_float(self, message:float)->bytearray:
         return struct.pack('f', message)
+
+
+    def activate_VES(self)->None:
+        self.set_M2S_RS_ACTIVE( 1 )
+
+
+    def deactivate_VES(self)->None:
+        self.set_M2S_RS_ACTIVE( -1 )
+
+
+    def turn_off_VCU(self)->None:
+        pass
+
 
 
 
