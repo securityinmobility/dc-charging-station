@@ -1,5 +1,6 @@
 import socket
 import struct
+import threading
 from threading import Thread, Lock
 import threading
 from master_to_slave import MasterToSlave
@@ -22,6 +23,7 @@ class KratzerLowLevel:
         self.socket_MTS.bind((IP, port_MTS))
         self.mutex = threading.Lock()
         self.ip = IP
+        self.stop_event = threading.Event()
 
 
     def get_S2M_AS_SW1(self) -> int|float:
@@ -286,8 +288,21 @@ class KratzerLowLevel:
         self.m2s.values["M2S_M2S_RS_SOC_0"] = new_value
 
 
+    def initiate_thread(self)->None:
+        thread = Thread(target = send_packet, args = ())
+        thread.start()
+
+
+    def end(self)->None:
+        stop_event.set()
+        thread.join()
+        sock.close()
+
+
     def send_package(self):
-        self.sock.sendto(self.build_message(), (self.ip, self.port))
+        while not self.stop_event.is_set():
+            self.sock.sendto(self.build_message(), (self.ip, self.port))
+            sleep(1)
 
 
     def receive_package(self):
