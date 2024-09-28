@@ -289,24 +289,34 @@ class KratzerLowLevel:
 
 
     def initiate_thread(self)->None:
-        thread = Thread(target = send_packet, args = ())
-        thread.start()
+        thread_m2s = Thread(target = send_packet, args = ())
+        thread_m2s.start()
+        thread_s2m = Thread(target = receive_package, args = ())
+        thread_s2m.start()
 
 
     def end(self)->None:
-        stop_event.set()
-        thread.join()
-        sock.close()
+        self.stop_event.set()
+        self.thread_m2s.join()
+        self.thread_s2m.join()
+        self.socket_MTS.close()
+        self.socket_STM.close()
 
 
     def send_package(self):
         while not self.stop_event.is_set():
-            self.sock.sendto(self.build_message(), (self.ip, self.port))
+            self.socket_MTS.sendto(self.build_message(), (self.ip, self.port))
             sleep(1)
 
 
     def receive_package(self):
-        package, sender = self.socket_STM.recvfrom(142)
+        while not self.stop_event.is_set():
+            package, sender = self.socket_STM.recvfrom(142)
+            self.save_package_to_fields(package)
+            sleep(1)
+
+
+    def save_package_to_fields(self, package):
         for line in slave_to_master:
             message = package[ line['offset'] : line['offset'] + line['length'] ]
             if line["type"] == 'Real':
