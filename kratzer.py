@@ -7,8 +7,7 @@ from master_to_slave import MasterToSlave
 from slave_to_master import SlaveToMaster
 
 
-#Based on the circuit diagram, the charge controller shall have the IP 192.168.1.100
-#The PC has 192.168.1.102
+#Based on the circuit diagram, the charge controller shall have the IP 192.168.1.100 and the PC has 192.168.1.102
 
 
 class KratzerLowLevel:
@@ -295,12 +294,21 @@ class KratzerLowLevel:
         thread_s2m.start()
 
 
-    def end(self)->None:
+    def end_threads(self)->None:
         self.stop_event.set()
         self.thread_m2s.join()
         self.thread_s2m.join()
         self.socket_MTS.close()
         self.socket_STM.close()
+
+
+    def request_control( self ):
+        self.m2s.values["M2S_RS_CW1"] |= (1<<3)
+        self.m2s.values["M2S_RS_CW1"] |= (1<<7)
+        self.m2s.values["M2S_RS_CW1"] |= (1<<2)
+        #should I have a sleep here? how do I wait until i received the mesages?
+        self.m2s.values["M2S_RS_CW1"] |= 1
+        self.m2s.values["M2S_RS_CW1"] &= (0<<7)
 
 
     def send_package(self):
