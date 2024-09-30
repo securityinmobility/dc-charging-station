@@ -308,7 +308,7 @@ class KratzerLowLevel:
         self.m2s.values["M2S_RS_CW1"] |= (1<<2)
         #should I have a sleep here? how do I wait until i received the mesages?
         self.m2s.values["M2S_RS_CW1"] |= 1
-        self.m2s.values["M2S_RS_CW1"] &= (0<<7)
+        self.m2s.values["M2S_RS_CW1"] &= ~(1<<7)
 
 
     def send_package(self):
