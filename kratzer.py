@@ -5,7 +5,7 @@ from threading import Thread, Lock
 import threading
 from master_to_slave import MasterToSlave
 from slave_to_master import SlaveToMaster
-
+from time import sleep
 
 #Based on the circuit diagram, the charge controller shall have the IP 192.168.1.100 and the PC has 192.168.1.102
 
@@ -155,139 +155,224 @@ class KratzerLowLevel:
         return self.s2m.values["S2M_AV_BATT_SOC"]
 
     def set_M2S_RS_CW1(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_RS_CW1"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_U(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_U"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_Imin(self, new_value:float):
+        self.mutex.acquire()
+        self.m2s.values["M2S_M2S_SP_U"] = new_value
+        self.mutex.release()
         self.m2s.values["M2S_M2S_SP_Imin"] = new_value
 
     def set_M2S_M2S_SP_Imax(self, new_value:float):
+        self.mutex.acquire()
+        self.m2s.values["M2S_M2S_SP_U"] = new_value
+        self.mutex.release()
         self.m2s.values["M2S_M2S_SP_Imax"] = new_value
 
     def set_M2S_M2S_SP_Umin(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_Umin"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_Umax(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_Umax"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_LIMIT_Umin(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_LIMIT_Umin"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_LIMIT_Umax(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_LIMIT_Umax"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_LIMIT_Imin(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_LIMIT_Imin"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_LIMIT_Imax(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_LIMIT_Imax"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_R1(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_R1"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_R2(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_R2"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_R3(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_R3"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_R4(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_R4"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_C1(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_C1"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_I_Filter(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_I_Filter"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_U0_A(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_U0_A"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_KP_I(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_KP_I"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_TN_I(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_TN_I"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_KP_U(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_KP_U"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_TN_U(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_TN_U"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_KP_M(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_KP_M"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_TN_M(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_TN_M"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_U_Ramp(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_U_Ramp"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_I_Ramp(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_I_Ramp"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_ParSet(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_ParSet"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_REG_Mode(self, new_value:int):
-        #0, 1, 2, 3, 4, 6, 9, 10
-        #4, 6 = Stromregelung
-        #0-3, 9, 10 = Spannungsregelung
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_REG_Mode"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_Model(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_Model"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_RS_CW2(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_RS_CW2"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_P(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_P"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_C2(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_C2"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_L1(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_L1"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_BATT_U0_B(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_BATT_U0_B"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_LF_Mode(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_LF_Mode"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_MF_Mode(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_MF_Mode"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_LF_Hz(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_LF_Hz"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_LF_U(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_LF_U"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_MF_Hz(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_MF_Hz"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_MF_I(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_MF_I"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_RPL_MF_U(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_RPL_MF_U"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_SOC_C_Nom(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_SOC_C_Nom"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_SP_SOC_0(self, new_value:float):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_SP_SOC_0"] = new_value
+        self.mutex.release()
 
     def set_M2S_M2S_RS_SOC_0(self, new_value:int):
+        self.mutex.acquire()
         self.m2s.values["M2S_M2S_RS_SOC_0"] = new_value
+        self.mutex.release()
 
 
-    def initiate_thread(self)->None:
+    def initiate_threads(self)->None:
         thread_m2s = Thread(target = send_packet, args = ())
         thread_m2s.start()
         thread_s2m = Thread(target = receive_package, args = ())
@@ -333,7 +418,9 @@ class KratzerLowLevel:
                 result = decode_unsigned_int(message)
             if line["type"] == 'SINT':
                 result = decode_signed_int(message)
+            self.mutex.acquire()
             self.s2m.values[line["name"]] = result
+            self.mutex.release()
 
 
     def decode_signed_int(self, message:bytearray)->int:
