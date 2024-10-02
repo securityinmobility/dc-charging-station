@@ -11,9 +11,16 @@ class CharbyteChargingStation:
     def isChargingReady(self) -> bool:
         pass
 
-    def setPWM(self, dutycycle: float):
+    def get_pwm(self):
+        frequency, duty_cycle = self.bcc.get_pwm()
+        duty_cycle = float(duty_cycle)*0.1
+        return frequency, duty_cycle
+
+
+    def setPWM(self, frequency:int, duty_cycle: float):
         self.enablePWM()
-        self.cbb.set_pwm(1000, dutycicle)
+        duty_cycle = int( duty_cycle*10 )
+        self.cbb.set_pwm(frequency, duty_cycle)
 
     def enablePWM(self)->None:
         cbb.control_pwm(chargebyte_board.ControlCode(1))
