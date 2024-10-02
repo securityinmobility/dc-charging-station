@@ -6,6 +6,7 @@ import threading
 import queue
 import time
 
+
 class ResistorCode(Enum):
     Ω_2700 = 0
     Ω_150 = 1
@@ -265,7 +266,6 @@ class ChargebyteBoard:
         Device-Get-Ucp is the request for the control pilot (CP) voltage. Due to the fact that the voltage is changing with 1 kHz, the highest and lowest voltage value will be measured. The data resolution is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit. The corresponding request and response are given in the tables below.
         """
         self.send_packet(0x14, bytearray())
-        #self.messages_to_send.append((0x14, bytearray()))
         response = self.get_response(0x14)
         self.check_response_length(response,4)
         positive_cp = self.join_bytes(response[0], response[1])
@@ -437,5 +437,18 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         return byte_voltage
 
 
-
+    def get_state(self) -> str:
+        precision_interval = 0.3
+        pwm = self.get_ucp()
+        if( abs( pwm - 12 ) <= precision_interval )
+            return 'A'
+        if( abs( pwm - 9 ) <= precision_interval )
+            return 'B'
+        if( abs( pwm - 6 ) <= precision_interval )
+            return 'C'
+        if( abs( pwm - 3 ) <= precision_interval )
+            return 'D'
+        if( abs( pwm - 0 ) <= precision_interval )
+            return 'E'
+        return 'F'
 
