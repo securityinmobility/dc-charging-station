@@ -387,26 +387,56 @@ class KratzerLowLevel:
         self.socket_STM.close()
 
 
+    def get_bit( self, number, bit_position ):
+        return ( number << bit_position ) & 1
+
+
+    def catch_watchdog(self, bit_position:int):
+        for i in range (30):
+            self.receive_package()
+            if( get_bit( self.s2m.values["S2M_AS_SW2"], bit_position ) )
+                break
+            sleep(0.1)
+        if( !get_bit( self.s2m.values["S2M_AS_SW2"], bit_position ) )
+            throw Exception("watchdog did not come")
+
+
     def request_control( self ):
         self.m2s.values["M2S_RS_CW1"] |= (1<<3)
         self.m2s.values["M2S_RS_CW1"] |= (1<<7)
+        self.send_package()
+        sleep(1)
         self.m2s.values["M2S_RS_CW1"] |= (1<<2)
-        #should I have a sleep here? how do I wait until i received the mesages?
+        self.send_package()
+        self.catch_watchdog(3)
+        self.catch_watchdog(9)
+        self.catch_watchdog(0)
         self.m2s.values["M2S_RS_CW1"] |= 1
+        self.send_package()
+        self.catch_watchdog(1)
         self.m2s.values["M2S_RS_CW1"] &= ~(1<<7)
+        self.send_package()
+
+
+    def sending_thread(self):
+        while not self.stop_event.is_set():
+            self.send_package()
+            sleep(0.1)
 
 
     def send_package(self):
+        self.socket_MTS.sendto(self.build_message(), (self.ip, self.port))
+
+
+    def receiving_thread(self):
         while not self.stop_event.is_set():
-            self.socket_MTS.sendto(self.build_message(), (self.ip, self.port))
-            sleep(1)
+            self.receive_package()
+            sleep(0.1)
 
 
     def receive_package(self):
-        while not self.stop_event.is_set():
-            package, sender = self.socket_STM.recvfrom(142)
-            self.save_package_to_fields(package)
-            sleep(1)
+        package, sender = self.socket_STM.recvfrom(142)
+        self.save_package_to_fields(package)
 
 
     def save_package_to_fields(self, package):
