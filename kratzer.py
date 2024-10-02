@@ -402,19 +402,27 @@ class KratzerLowLevel:
 
 
     def request_control( self ):
+        self.mutex.acquire()
         self.m2s.values["M2S_RS_CW1"] |= (1<<3)
         self.m2s.values["M2S_RS_CW1"] |= (1<<7)
+        self.mutex.release()
         self.send_package()
         sleep(1)
+        self.mutex.acquire()
         self.m2s.values["M2S_RS_CW1"] |= (1<<2)
+        self.mutex.release()
         self.send_package()
         self.catch_watchdog(3)
         self.catch_watchdog(9)
         self.catch_watchdog(0)
+        self.mutex.acquire()
         self.m2s.values["M2S_RS_CW1"] |= 1
+        self.mutex.release()
         self.send_package()
         self.catch_watchdog(1)
+        self.mutex.acquire()
         self.m2s.values["M2S_RS_CW1"] &= ~(1<<7)
+        self.mutex.release()
         self.send_package()
 
 
@@ -510,8 +518,6 @@ class KratzerLowLevel:
 
     def turn_off_VCU(self)->None:
         pass
-
-
 
 
 
