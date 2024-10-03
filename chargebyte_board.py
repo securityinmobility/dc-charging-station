@@ -414,35 +414,3 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         return byte_voltage
 
 
-    def get_state(self) -> str:
-        precision_interval = 0.3
-        positive_voltage, negative_voltage = self.get_ucp()
-        if( abs( positive_voltage - 12 ) <= precision_interval )
-            return 'A'
-        if( abs( positive_voltage - 9 ) <= precision_interval )
-            return 'B'
-        if( abs( positive_voltage - 6 ) <= precision_interval )
-            return 'C'
-        if( abs( positive_voltage - 3 ) <= precision_interval )
-            return 'D'
-        if( abs( positive_voltage - 0 ) <= precision_interval )
-            return 'E'
-        return 'F'
-
-
-
-    def ist_charge_possible(self, state:str) -> bool:
-        if state == 'A':
-            return False
-        if state == 'B':
-            return False
-        if state == 'C':
-            return True
-        if state == 'D':
-            return True
-        if state == 'E':
-            return False
-        if state == 'F':
-            return False
-
-
