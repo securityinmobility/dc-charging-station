@@ -2,6 +2,7 @@ import chargebyte_board
 
 
 class CharbyteChargingStation:
+
     def __init__(self, host, port):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
 
@@ -20,13 +21,13 @@ class CharbyteChargingStation:
         return frequency, duty_cycle
 
 
-    def setPWM(self, frequency:int, duty_cycle:float):
-        self.enablePWM()
+    def set_pwm(self, frequency:int, duty_cycle:float):
+        self.enable_pwm()
         duty_cycle = int( duty_cycle*10 )
         self.cbb.set_pwm(frequency, duty_cycle)
 
 
-    def enablePWM(self):
+    def enable_pwm(self):
         cbb.control_pwm(chargebyte_board.ControlCode(1))
 
 
