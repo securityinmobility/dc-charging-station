@@ -16,12 +16,22 @@ class CharbyteChargingStation:
 
 
     def get_pwm(self) -> [int,float]:
+        """returns one int and one float
+
+        the int represents the frequency in Hz
+        the float represents the dutycycle, with precision 0.1
+        """
         frequency, duty_cycle = self.bcc.get_pwm()
         duty_cycle = float(duty_cycle)*0.1
         return frequency, duty_cycle
 
 
     def set_pwm(self, frequency:int, duty_cycle:float):
+        """returns None
+
+        frequency in Hz, usually 1000
+        dutycicle in float represents the % of the cycle. the precision is 0.1, which means floats such as 50,456543 will become 50,4%.
+        """
         self.enable_pwm()
         duty_cycle = int( duty_cycle*10 )
         self.cbb.set_pwm(frequency, duty_cycle)
