@@ -11,10 +11,6 @@ class CharbyteChargingStation:
         pass
 
 
-    def is_charging_ready(self) -> bool:
-        pass
-
-
     def get_pwm(self) -> [int,float]:
         """returns one int and one float
 
