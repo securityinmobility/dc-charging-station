@@ -125,6 +125,7 @@ class HighVoltageSource(ABC):
         Get the current voltage measured
         """
         raise NotImplementedError()
+
     def get_current(self) -> float:
         """
         Get the current amperage going into (or out of) the battery

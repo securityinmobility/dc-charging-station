@@ -3,17 +3,22 @@ from base_classes import ChargingStation, ChargingState
 
 
 class CharbyteChargingStation(ChargingStation):
-
     def __init__(self, host, port):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
+        self.frequency = 1000 #most used frequency, we can change later
 
 
     def set_cable_lock(self, locked: bool):
-        pass
+        if(locked):
+            self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
+            self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(1))
+        else:
+            self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(0))
+            self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(0))
 
 
     def is_vehicle_detected(self) -> bool:
-        if self.get_state != ChargingState.A :
+        if self.get_state != ChargingState.A:
             return True
         return False
 
@@ -31,14 +36,6 @@ class CharbyteChargingStation(ChargingStation):
 
     def set_pwm_duty_cycle(self, dutycycle: float):
         self.set_pwm( self.frequency, duty_cycle )
-
-
-    def get_max_charge_current(self) -> ProximityPilotResitorValue:
-        pass
-
-
-    def set_max_charge_current(self, current: int):
-        pass
 
 
     def set_pwm(self, frequency:int, duty_cycle:float):
@@ -71,19 +68,10 @@ class CharbyteChargingStation(ChargingStation):
         return ChargingState.E
 
 
-    """def ist_charge_possible(self) -> bool:
+    def is_charging_possible(self) -> bool:
         state = this.get_state()
-        if state == 'A':
-            return False
-        if state == 'B':
-            return False
-        if state == 'C':
+        if state == ChargingStation.C or state == ChargingStation.D:
             return True
-        if state == 'D':
-            return True
-        if state == 'E':
-            return False
-        if state == 'F':
-            return False"""
+        return False
 
 

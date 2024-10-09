@@ -10,7 +10,7 @@ from time import sleep
 #Based on the circuit diagram, the charge controller shall have the IP 192.168.1.100 and the PC has 192.168.1.102
 
 
-class KratzerLowLevel:
+class Kratzer:
     def __init__(self, IP:str):
         self.s2m = SlaveToMaster()
         self.m2s = MasterToSlave()
@@ -394,11 +394,11 @@ class KratzerLowLevel:
     def catch_watchdog(self, bit_position:int):
         for i in range (30):
             self.receive_package()
-            if( get_bit( self.s2m.values["S2M_AS_SW2"], bit_position ) )
+            if get_bit(self.s2m.values["S2M_AS_SW2"],bit_position):
                 break
             sleep(0.1)
-        if( !get_bit( self.s2m.values["S2M_AS_SW2"], bit_position ) )
-            throw Exception("watchdog did not come")
+        if get_bit(self.s2m.values["S2M_AS_SW2"],bit_position)==0:
+            raise Exception("watchdog did not come")
 
 
     def request_control( self ):
