@@ -1,5 +1,6 @@
 from kratzer import Kratzer
 from base_classes import HighVoltageSource
+import time
 
 
 class KratzerHighLevelControl(HighVoltageSource):
@@ -11,8 +12,12 @@ class KratzerHighLevelControl(HighVoltageSource):
 
 
     def check_insulation(self) -> bool:
-        #self.kratzer.set_M2S_RS_ISO(1)#activate isolation check
-        pass
+        self.m2s.values["M2S_RS_CW1"] = new_value
+        m2s_rs_cw1 = self.kratzer.get_M2S_RS_CW1()
+        m2s_rs_cw1 |= (1<<4)
+        self.set_M2S_RS_CW1( m2s_rs_cw1 )
+        time.sleep(1)
+        return ( self.kratzer.get_S2M_AS_SW2() & 1 ) #the last bit of this field contains the result of the test
 
 
     def get_voltage(self) -> float:
