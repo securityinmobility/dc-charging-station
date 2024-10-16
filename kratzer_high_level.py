@@ -12,7 +12,7 @@ class KratzerHighLevelControl(HighVoltageSource):
 
 
     def check_insulation(self) -> bool:
-        self.m2s.values["M2S_RS_CW1"] = new_value
+        self.kratzer.m2s.values["M2S_RS_CW1"] = new_value
         m2s_rs_cw1 = self.kratzer.get_M2S_RS_CW1()
         m2s_rs_cw1 |= (1<<4)
         self.set_M2S_RS_CW1( m2s_rs_cw1 )
@@ -21,15 +21,16 @@ class KratzerHighLevelControl(HighVoltageSource):
 
 
     def get_voltage(self) -> float:
-        pass
+        return self.kratzer.get_S2M_AV_U()
 
 
     def get_current(self) -> float:
-        pass
+        return self.kratzer.get_S2M_AV_I()
 
 
     def set_charging_target(self, current: float, min_voltage: float, max_voltage: float):
         self.kratzer.set_M2S_SP_Umin(min_voltage)
         self.kratzer.set_M2S_SP_Umax(max_voltage)
         self.kratzer.set_M2S_SP_Imin(current)
+
 
