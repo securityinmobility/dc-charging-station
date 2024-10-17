@@ -2,7 +2,8 @@ import chargebyte_board
 from base_classes import ElectricVehicle
 
 
-class CharbyteHighLevelVehicle(ElectricVehicle):
+class CharbyteVehicle(ElectricVehicle):
+
     def __init__(self, host, port):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000 #most used frequency, we can change later
@@ -34,22 +35,23 @@ class CharbyteHighLevelVehicle(ElectricVehicle):
 
 
     def get_pwm_duty_cycle(self) -> float:
-        pass
+        _, duty_cycle = self.bcc.get_pwm()
+        duty_cycle = float(duty_cycle)*0.1
+        return duty_cycle
 
-    def set_charging_target(self, current: float, min_voltage: float, max_voltage: float):
-        pass
 
-    def get_current(self) -> float:
-        pass
+    #def set_pwm_duty_cycle(self, dutycycle: float):
+    #    self.set_pwm( self.frequency, duty_cycle )
+
 
     def get_voltage(self) -> float:
         pass
 
-    def check_insulation(self) -> bool:
+
+    def set_max_charge_current(self, max_current:float)->None:
+        ##
         pass
+        #cbb.activate_proximity_pilot_resistor()
 
-
-    def set_pwm_duty_cycle(self, dutycycle: float):
-        self.set_pwm( self.frequency, duty_cycle )
 
 
