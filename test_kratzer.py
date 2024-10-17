@@ -17,7 +17,7 @@ from unittest import mock
 def kratzer(mocker, mock_socket):
     host = socket.gethostname()
     mocker.patch('socket.socket', return_value = mock_socket)
-    kratzer = KratzerLowLevel(host)
+    kratzer = Kratzer(host)
     return kratzer
 
 
@@ -65,4 +65,5 @@ class TestKratzer:
 
     def test_receive_package(self, kratzer):
         pass
+
 
