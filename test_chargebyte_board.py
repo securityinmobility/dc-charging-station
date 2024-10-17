@@ -3,12 +3,13 @@ from unittest import mock
 import pytest
 from chargebyte_board import ChargebyteBoard
 from chargebyte_board import *
+from unittest.mock import MagicMock
 
 
 @pytest.fixture()
 def mock_socket():
-    mock_socket = mock.Mock()
-    mock_socket.recv = mock.Mock()
+    mock_socket = mock.MagicMock()
+    mock_socket.recv = mock.MagicMock()
     return mock_socket
 
 
@@ -29,12 +30,9 @@ def xor_calculator(parameter:list[int])-> int:
 
 
 def set_recv(data:list, mock):
-    raise NotImplementedError()
-    #data.append(xor_calculator(data))
-    #mock.recv.side_effect = [[data[0]],[data[1]],data[2:]]
-    #changes to the StopIteration error handling broke this tests.
-    #will seek another framework and reimplement later.
-    #otehr tests errors were fixed.
+    #raise NotImplementedError()
+    data.append(xor_calculator(data))
+    mock.recv.side_effect = [[data[0]],[data[1]],data[2:]]
 
 
 def proof_send_call(expected, mock):
