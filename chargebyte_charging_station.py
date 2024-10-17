@@ -5,11 +5,16 @@ from base_classes import ChargingStation, ChargingState
 class CharbyteChargingStation(ChargingStation):
 
     def __init__(self, host, port):
+        """receives host and port. sets frequency to the most used frequency of 1000Hz.
+        """
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000 #most used frequency, we can change later
 
 
     def set_cable_lock(self, locked: bool):
+        """Returns None
+        Can be used to lock or unlock both cables. if locked is True, both cables will be locked, otherwise both will be unlocked. Doesn't check for the current situation.
+        """
         if(locked):
             self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
             self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(1))
@@ -19,6 +24,9 @@ class CharbyteChargingStation(ChargingStation):
 
 
     def is_vehicle_detected(self) -> bool:
+        """Returns bools
+        Tells if the vehicle was detected or not
+        """
         if self.get_state != ChargingState.A:
             return True
         return False
@@ -36,12 +44,17 @@ class CharbyteChargingStation(ChargingStation):
 
 
     def get_pwm_duty_cycle(self):
+        """returns duty_cycle, already converted to %.
+        """
         _, duty_cycle = self.bcc.get_pwm()
         duty_cycle = float(duty_cycle)*0.1
         return duty_cycle
 
 
     def set_pwm_duty_cycle(self, dutycycle: float):
+        """frequency is set to the standard most used of 1000 Hz.
+        Returns None
+        """
         self.set_pwm( self.frequency, duty_cycle )
 
 
@@ -57,10 +70,16 @@ class CharbyteChargingStation(ChargingStation):
 
 
     def enable_pwm(self):
+        """returns None
+        PWM needs to be enabled before we can control it.
+        """
         cbb.control_pwm(chargebyte_board.ControlCode(1))
 
 
     def get_state(self) -> ChargingState:
+        """ returns ChargingState enum.
+        Gets the current state of the system.
+        """
         precision_interval = 0.3
         positive_voltage, negative_voltage = self.cbb.get_ucp()
         if abs(positive_voltage - 12) <= precision_interval:
@@ -77,6 +96,9 @@ class CharbyteChargingStation(ChargingStation):
 
 
     def is_charging_possible(self) -> bool:
+        """Returns bool
+        tells if we can initiate the chargind
+        """
         state = this.get_state()
         if state == ChargingStation.C or state == ChargingStation.D:
             return True
@@ -84,7 +106,10 @@ class CharbyteChargingStation(ChargingStation):
 
 
     def get_max_charge_current(self):
-        return ielf.cbb.get_voltage_of_proximity_signal()
+        """returns the voltage in Volts
+        converts the volt from the hardware, which has the resolution of 29mV/bit to volts
+        """
+        return float(self.cbb.get_voltage_of_proximity_signal())*29.0/1000.0
 
 
 
