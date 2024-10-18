@@ -10,7 +10,7 @@ class CharbyteChargingStation(ChargingStation):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000 #most used frequency, we can change later
 
-
+    @override
     def set_cable_lock(self, locked: bool):
         """Returns None
         Can be used to lock or unlock both cables. if locked is True, both cables will be locked, otherwise both will be unlocked. Doesn't check for the current situation.
@@ -51,22 +51,14 @@ class CharbyteChargingStation(ChargingStation):
         return duty_cycle
 
 
-    def set_pwm_duty_cycle(self, dutycycle: float):
-        """frequency is set to the standard most used of 1000 Hz.
-        Returns None
+    @override
+    def set_pwm_duty_cycle(self, duty_cycle:float):
         """
-        self.set_pwm( self.frequency, duty_cycle )
-
-
-    def set_pwm(self, frequency:int, duty_cycle:float):
-        """
-        frequency in Hz, usually 1000
         dutycicle in float represents the % of the cycle. the precision is 0.1, which means floats such as 50,456543 will become 50,4%.
         """
         self.enable_pwm()
-        duty_cycle = int( duty_cycle*10 )
-        self.frequency = frequency
-        self.cbb.set_pwm(frequency, duty_cycle)
+        duty_cycle = int(duty_cycle*10)
+        self.cbb.set_pwm(self.frequency, duty_cycle)
 
 
     def enable_pwm(self):
@@ -76,6 +68,7 @@ class CharbyteChargingStation(ChargingStation):
         cbb.control_pwm(chargebyte_board.ControlCode(1))
 
 
+    @override
     def get_state(self) -> ChargingState:
         """ returns ChargingState enum.
         Gets the current state of the system.
@@ -105,11 +98,18 @@ class CharbyteChargingStation(ChargingStation):
         return False
 
 
+    @override
     def get_max_charge_current(self):
         """returns the voltage in Volts
         converts the volt from the hardware, which has the resolution of 29mV/bit to volts
         """
         return float(self.cbb.get_voltage_of_proximity_signal())*29.0/1000.0
+
+
+    @override
+    def set_max_charge_current(self, current: int):
+        pass
+
 
 
 

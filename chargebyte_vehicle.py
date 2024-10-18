@@ -9,6 +9,7 @@ class CharbyteVehicle(ElectricVehicle):
         self.frequency = 1000 #most used frequency, we can change later
 
 
+    @override
     def get_state(self) -> ChargingState:
         precision_interval = 0.3
         positive_voltage, negative_voltage = self.cbb.get_ucp()
@@ -25,6 +26,7 @@ class CharbyteVehicle(ElectricVehicle):
         return ChargingState.E
 
 
+    @override
     def set_cable_lock(self, locked: bool):
         if(locked):
             self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
@@ -34,20 +36,14 @@ class CharbyteVehicle(ElectricVehicle):
             self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(0))
 
 
+    @override
     def get_pwm_duty_cycle(self) -> float:
         _, duty_cycle = self.bcc.get_pwm()
         duty_cycle = float(duty_cycle)*0.1
         return duty_cycle
 
 
-    #def set_pwm_duty_cycle(self, dutycycle: float):
-    #    self.set_pwm( self.frequency, duty_cycle )
-
-
-    def get_voltage(self) -> float:
-        pass
-
-
+    @override
     def set_max_charge_current(self, max_current:float)->None:
         ##
         pass
