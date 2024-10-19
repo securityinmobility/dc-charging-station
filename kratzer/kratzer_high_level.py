@@ -4,16 +4,12 @@ import time
 
 
 class KratzerHighLevelControl(HighVoltageSource):
-    self.min_voltage
-    self.max_voltage
-
     def __init___(self, IP):
         self.kratzer = Kratzer(IP)
 
 
     @override
     def check_insulation(self) -> bool:
-        self.kratzer.m2s.values["M2S_RS_CW1"] = new_value
         m2s_rs_cw1 = self.kratzer.get_M2S_RS_CW1()
         m2s_rs_cw1 |= (1<<4)
         self.set_M2S_RS_CW1( m2s_rs_cw1 )

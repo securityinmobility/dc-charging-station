@@ -65,7 +65,7 @@ class CharbyteChargingStation(ChargingStation):
         """returns None
         PWM needs to be enabled before we can control it.
         """
-        cbb.control_pwm(chargebyte_board.ControlCode(1))
+        self.cbb.control_pwm(chargebyte_board.ControlCode(1))
 
 
     @override
