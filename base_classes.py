@@ -1,27 +1,32 @@
 from abc import ABC
 from enum import Enum
 
+
 class ChargingState(Enum):
     """
     Charging state as described in DIN EN 61851-1:2012
     For a short summary see: https://evsim.gonium.net/#der-control-pilot-cp
     """
-    A = 'A'
-    B = 'B'
-    C = 'C'
-    D = 'D'
-    E = 'E'
-    F = 'F'
+
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+
 
 class ProximityPilotResitorValue(Enum):
     """
     Resistance values between PP and PE as defined in DIN EN 61851-1:2012
     For a short summary see: https://evsim.gonium.net/#der-proximity-plug-pp
     """
+
     Charge63A = 100
     Charge32A = 220
     Charge20A = 680
     Charge13A = 1500
+
 
 class ChargingStation(ABC):
     def get_state(self) -> ChargingState:
@@ -66,6 +71,7 @@ class ChargingStation(ABC):
             self.set_pwm_duty_cycle(current / 2.5 + 64)
         else:
             raise ValueError("Charge current cannot be higher than 80A")
+
 
 class ElectricVehicle(ABC):
     def get_state(self) -> ChargingState:
@@ -112,6 +118,7 @@ class ElectricVehicle(ABC):
         """
         raise NotImplementedError()
 
+
 class HighVoltageSource(ABC):
     def check_insulation(self) -> bool:
         """
@@ -133,7 +140,9 @@ class HighVoltageSource(ABC):
         """
         raise NotImplementedError()
 
-    def set_charging_target(self, current: float, min_voltage: float, max_voltage: float):
+    def set_charging_target(
+        self, current: float, min_voltage: float, max_voltage: float
+    ):
         """
         Set the target parameters for charging.
         The goal is to charging/discharging the battery with `current` amps,

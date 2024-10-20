@@ -2,14 +2,13 @@ from base_classes import ChargingStation, ChargingState
 import chargebyte_board
 from typing_extensions import override
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 
 class CharbyteChargingStation(ChargingStation):
-
     def __init__(self, host, port):
-        """receives host and port. sets frequency to the most used frequency of 1000Hz.
-        """
+        """receives host and port. sets frequency to the most used frequency of 1000Hz."""
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000  # most used frequency, we can change later
 
@@ -18,7 +17,7 @@ class CharbyteChargingStation(ChargingStation):
         """Returns None
         Can be used to lock or unlock both cables. if locked is True, both cables will be locked, otherwise both will be unlocked. Doesn't check for the current situation.
         """
-        if (locked):
+        if locked:
             self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
             self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(1))
         else:
@@ -40,14 +39,13 @@ class CharbyteChargingStation(ChargingStation):
         the float represents the dutycycle, with precision 0.1
         """
         frequency, duty_cycle = self.bcc.get_pwm()
-        duty_cycle = float(duty_cycle)*0.1
+        duty_cycle = float(duty_cycle) * 0.1
         return frequency, duty_cycle
 
     def get_pwm_duty_cycle(self):
-        """returns duty_cycle, already converted to %.
-        """
+        """returns duty_cycle, already converted to %."""
         _, duty_cycle = self.bcc.get_pwm()
-        duty_cycle = float(duty_cycle)*0.1
+        duty_cycle = float(duty_cycle) * 0.1
         return duty_cycle
 
     @override
@@ -56,7 +54,7 @@ class CharbyteChargingStation(ChargingStation):
         dutycicle in float represents the % of the cycle. the precision is 0.1, which means floats such as 50,456543 will become 50,4%.
         """
         self.enable_pwm()
-        duty_cycle = int(duty_cycle*10)
+        duty_cycle = int(duty_cycle * 10)
         self.cbb.set_pwm(self.frequency, duty_cycle)
 
     def enable_pwm(self):
@@ -67,7 +65,7 @@ class CharbyteChargingStation(ChargingStation):
 
     @override
     def get_state(self) -> ChargingState:
-        """ returns ChargingState enum.
+        """returns ChargingState enum.
         Gets the current state of the system.
         """
         precision_interval = 0.3
@@ -98,7 +96,7 @@ class CharbyteChargingStation(ChargingStation):
         """returns the voltage in Volts
         converts the volt from the hardware, which has the resolution of 29mV/bit to volts
         """
-        return float(self.cbb.get_voltage_of_proximity_signal())*29.0/1000.0
+        return float(self.cbb.get_voltage_of_proximity_signal()) * 29.0 / 1000.0
 
     @override
     def set_max_charge_current(self, current: int):

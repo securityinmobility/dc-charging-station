@@ -5,7 +5,8 @@ from enum import Flag, auto
 from enum import Enum
 import socket
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 
 
 class ResistorCode(Enum):
@@ -81,7 +82,6 @@ class ChargebyteException(Exception):
 
 
 class ChargebyteBoard:
-
     def __init__(self, host: str, port: int):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
@@ -108,16 +108,17 @@ class ChargebyteBoard:
         start_of_message = 0x02
         length_of_message = 0x03 + len(payload)
         device_adress = 0x00
-        header = bytearray(
-            [start_of_message, length_of_message, device_adress, service_id]) + payload
+        header = (
+            bytearray([start_of_message, length_of_message, device_adress, service_id])
+            + payload
+        )
         return header + bytearray([self.calculate_checksum(header)])
 
     def read_response(self) -> bytearray:
         beginning = self.socket.recv(1)
         length = self.socket.recv(1)
         if len(beginning) == 0 or len(length) == 0:
-            raise ChargebyteException(
-                "No data returned when trying to read response")
+            raise ChargebyteException("No data returned when trying to read response")
         full_len = int(length[0]) + 2
         data = bytearray(beginning + length)
         while len(data) < full_len:
@@ -130,15 +131,15 @@ class ChargebyteBoard:
 
     def check_response(self, response: bytearray):
         if response[0] != 0x02:
-            raise ChargebyteException('beginning of message was not 0x02')
+            raise ChargebyteException("beginning of message was not 0x02")
         if self.calculate_checksum(response[:-1]) != response[-1]:
-            raise ChargebyteException(
-                'Something went wrong: the check block is wrong!')
+            raise ChargebyteException("Something went wrong: the check block is wrong!")
 
     def check_response_length(self, response: list, length: int) -> None:
         if len(response) != length:
             raise Exception(
-                'Something went wrong, the response has an unexpected length!')
+                "Something went wrong, the response has an unexpected length!"
+            )
 
     def parse_response(self, response: bytearray) -> bytearray:
         return response[4:-1]
@@ -150,8 +151,7 @@ class ChargebyteBoard:
         return response
 
     def join_bytes(self, low_byte: int, high_byte: int) -> int:
-        """ join the 2 bytes on a single number
-        """
+        """join the 2 bytes on a single number"""
 
         return (high_byte << 8) | low_byte
 
@@ -159,8 +159,7 @@ class ChargebyteBoard:
         pass
 
     def test_device_one(self) -> tuple[int, int, ResetType]:
-        """ This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor
-        """
+        """This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor"""
 
         self.send_packet(0x01, bytearray())
         response = self.get_response(0x01)
@@ -171,8 +170,7 @@ class ChargebyteBoard:
         return software_version, hardware_version, last_reset_reason
 
     def test_device_two(self) -> tuple[int, ResetReason]:
-        """This service gives access to reset causes (i.e. why the coprocessor restarted) as well as the software build number
-        """
+        """This service gives access to reset causes (i.e. why the coprocessor restarted) as well as the software build number"""
 
         self.send_packet(0x04, bytearray())
         response = self.get_response(0x04)
@@ -182,8 +180,7 @@ class ChargebyteBoard:
         return build, last_reset_reason
 
     def get_pwm(self) -> tuple[int, int]:
-        """ The pulse width of the PWM signal can be read by sending the device-get PWM service.
-        """
+        """The pulse width of the PWM signal can be read by sending the device-get PWM service."""
 
         self.send_packet(0x10, bytearray())
         response = self.get_response(0x10)
@@ -193,22 +190,19 @@ class ChargebyteBoard:
         return frequency, duty_cicle
 
     def set_pwm(self, frequency: int, dutycycle: int) -> ControlPWM:
-        """ The pulse width of the PWM signal can be set by sending the device-set PWM service with the resolution 0.1 % and modulation frequency Fi in Hz (normally 1000). This command requires that the PWM generation is already on.
-        """
+        """The pulse width of the PWM signal can be set by sending the device-set PWM service with the resolution 0.1 % and modulation frequency Fi in Hz (normally 1000). This command requires that the PWM generation is already on."""
 
-        low_freq = frequency & 0xff
-        high_freq = (frequency >> 8) & 0xff
-        low_duty = dutycycle & 0xff
-        high_duty = (dutycycle >> 8) & 0xff
-        self.send_packet(0x11, bytearray(
-            [low_freq, high_freq, low_duty, high_duty]))
+        low_freq = frequency & 0xFF
+        high_freq = (frequency >> 8) & 0xFF
+        low_duty = dutycycle & 0xFF
+        high_duty = (dutycycle >> 8) & 0xFF
+        self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
         response = self.get_response(0x11)
         self.check_response_length(response, 1)
         return ControlPWM(response[0])
 
     def control_pwm(self, control_code: ControlCode) -> StatusPWMGeneration:
-        """ The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control.
-        """
+        """The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control."""
 
         self.send_packet(0x12, bytearray([control_code]))
         response = self.get_response(0x12)
@@ -240,18 +234,17 @@ class ChargebyteBoard:
             resistance_bits |= 1
             resistance -= 2700
         if resistance >= 1300:
-            resistance_bits |= (1 << 1)
+            resistance_bits |= 1 << 1
             resistance -= 1300
         if resistance >= 347:
-            resistance_bits |= (1 << 2)
+            resistance_bits |= 1 << 2
         self.send_packet(0x15, bytearray([resistance_bits]))
         response = self.get_response(0x15)
         self.check_response_length(response, 1)
         return int(response[0])
 
     def lock_unlock_cable_one(self, command: ControlCode) -> LockStatus:
-        """The device supports two separate locks for locking the charging sockets.
-        """
+        """The device supports two separate locks for locking the charging sockets."""
         self.send_packet(0x17, bytearray([command]))
         response = self.get_response(0x17)
         self.check_response_length(response, 1)
@@ -273,7 +266,7 @@ class ChargebyteBoard:
         return LockStatus(response[0])
 
     def get_motor_fault_pin(self) -> StatusCode:
-        """ The full bridge drivers for both, lock motors 1 and 2, have a fault pin. This fault pin is activated in case one or both full bridges detect the following problems:
+        """The full bridge drivers for both, lock motors 1 and 2, have a fault pin. This fault pin is activated in case one or both full bridges detect the following problems:
             Overcurrent condition
             Undervoltage condition
             Thermal shutdown
@@ -293,8 +286,8 @@ class ChargebyteBoard:
     def set_cyclic_process_data(self, interval: int) -> StatusCode:
         """The device is able to send cyclic data messages in a given interval. The messages contain the PWM values, the CP voltage and the plug lock status. The device-set request is given with the parameter interval. Valid values are in the range of 0..FF, where 0=off, 1=100ms, 2=200ms, etc..
 
-        The measured duty cycle has the resolution of the signal as 0.1 %, meaning the value “500” corresponds to 50,0 % PWM.
-The data resolution of the measured voltages is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit.
+                The measured duty cycle has the resolution of the signal as 0.1 %, meaning the value “500” corresponds to 50,0 % PWM.
+        The data resolution of the measured voltages is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit.
         """
 
         self.send_packet(0x20, bytearray([interval]))
@@ -319,14 +312,14 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         """
 
         if parameter > 255 or parameter < 1:
-            raise ValueError('This parameter is defined between 1 and 255!')
+            raise ValueError("This parameter is defined between 1 and 255!")
         self.send_packet(0x31, bytearray([parameter]))
         response = self.get_response(0x31)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
 
     def reset(self) -> int:
-        """ Executes a software reset on device
+        """Executes a software reset on device
 
         No direct response is sent, we may wait for the first message on Device initialization to double check the reset was performed. The POR message on initialization is currently set to zero.
         """
@@ -336,8 +329,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         # return response[0]
 
     def activate_proximity_pilot_resistor(self, control: ResistorCode) -> ErrorCode:
-        """This service enables or disables resistors that load the proximity signal. These resistors are switched between proximity and GND.
-        """
+        """This service enables or disables resistors that load the proximity signal. These resistors are switched between proximity and GND."""
 
         self.send_packet(0x50, bytearray([control]))
         response = self.get_response(0x50)
@@ -355,8 +347,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         return response[0]
 
     def disable_pullup_resistor(self) -> int:
-        """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup.
-        """
+        """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup."""
 
         self.send_packet(0x51, bytearray([0x00]))
         response = self.get_response(0x51)
@@ -364,7 +355,7 @@ The data resolution of the measured voltages is 10 bit. The measuring limit is s
         return response[0]
 
     def get_voltage_of_proximity_signal(self) -> int:
-        """ The service requests the measured voltage at the proximity pilot pin. The resolution is 29 mV/LSB.
+        """The service requests the measured voltage at the proximity pilot pin. The resolution is 29 mV/LSB.
 
         return value: is the voltage.
         """

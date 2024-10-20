@@ -1,1 +1,9 @@
 *.pyc
+.DS_Store
+"Captura de Tela 2024-04-25 \303\240s 12.10.14.png"
+Documentation/.DS_Store
+VCUS_(VES_control_Unit_Slave).pdf
+evacharge_se_datasheet_r7.pdf
+kratzer-interface.md
+*.png
+.gitignore

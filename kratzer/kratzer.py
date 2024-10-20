@@ -1,4 +1,3 @@
-
 import socket
 import struct
 import threading
@@ -398,13 +397,13 @@ class Kratzer:
 
     def request_control(self):
         self.mutex.acquire()
-        self.m2s.values["M2S_RS_CW1"] |= (1 << 3)
-        self.m2s.values["M2S_RS_CW1"] |= (1 << 7)
+        self.m2s.values["M2S_RS_CW1"] |= 1 << 3
+        self.m2s.values["M2S_RS_CW1"] |= 1 << 7
         self.mutex.release()
         self.send_package()
         sleep(1)
         self.mutex.acquire()
-        self.m2s.values["M2S_RS_CW1"] |= (1 << 2)
+        self.m2s.values["M2S_RS_CW1"] |= 1 << 2
         self.mutex.release()
         self.send_package()
         self.catch_watchdog(3)
@@ -439,58 +438,60 @@ class Kratzer:
 
     def save_package_to_fields(self, package):
         for line in slave_to_master:
-            message = package[line['offset']: line['offset'] + line['length']]
-            if line["type"] == 'Real':
+            message = package[line["offset"] : line["offset"] + line["length"]]
+            if line["type"] == "Real":
                 result = decode_float(message)
-            if line["type"] == 'UINT':
+            if line["type"] == "UINT":
                 result = decode_unsigned_int(message)
-            if line["type"] == 'SINT':
+            if line["type"] == "SINT":
                 result = decode_signed_int(message)
             self.mutex.acquire()
             self.s2m.values[line["name"]] = result
             self.mutex.release()
 
     def decode_signed_int(self, message: bytearray) -> int:
-        if (len(message) == 4):
-            return struct.unpack('i', message)[0]
-        return struct.unpack('h', message)[0]
+        if len(message) == 4:
+            return struct.unpack("i", message)[0]
+        return struct.unpack("h", message)[0]
 
     def decode_unsigned_int(self, message: bytearray) -> int:
-        if (len(message) == 4):
-            return struct.unpack('I', message)[0]
-        return struct.unpack('H', message)[0]
+        if len(message) == 4:
+            return struct.unpack("I", message)[0]
+        return struct.unpack("H", message)[0]
 
     def decode_float(self, message: bytearray) -> float:
-        return struct.unpack('f', message)[0]
+        return struct.unpack("f", message)[0]
 
     def build_message(self) -> bytearray:
         result = bytearray()
         for line in self.m2s.master_to_slave:
             if line["type"] == "UINT":
                 encoded = self.encode_unsigned_int(
-                    self.m2s.values[line['name']], line["length"])
+                    self.m2s.values[line["name"]], line["length"]
+                )
             elif line["type"] == "SINT":
                 encoded = self.encode_signed_int(
-                    self.m2s.values[line['name']], line["length"])
+                    self.m2s.values[line["name"]], line["length"]
+                )
             elif line["type"] == "Real":
-                encoded = self.encode_float(self.m2s.values[line['name']])
+                encoded = self.encode_float(self.m2s.values[line["name"]])
             result.extend(encoded)
         return result
 
     def encode_signed_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return struct.pack('i', message)
+            return struct.pack("i", message)
         if length == 2:
-            return struct.pack('h', message)
+            return struct.pack("h", message)
 
     def encode_unsigned_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return struct.pack('I', message)
+            return struct.pack("I", message)
         if length == 2:
-            return struct.pack('H', message)
+            return struct.pack("H", message)
 
     def encode_float(self, message: float) -> bytearray:
-        return struct.pack('f', message)
+        return struct.pack("f", message)
 
     def activate_VES(self) -> None:
         self.set_M2S_RS_ACTIVE(1)
