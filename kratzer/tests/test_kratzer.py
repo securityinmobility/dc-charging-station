@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 from kratzer import *
 import pytest
 from unittest import mock

@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 from kratzer import Kratzer
 from base_classes import HighVoltageSource
 import time
