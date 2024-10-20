@@ -18,13 +18,6 @@ class ResistorCode(Enum):
     OFF = 7
 
 
-class ResistorValue(Enum):
-    Ω_2700 = 0
-    Ω_1300 = 1
-    Ω_347 = 2
-    RESERVED = 3
-
-
 class ControlCode(Enum):
     DISABLE = 0
     ENABLE = 1
@@ -232,7 +225,7 @@ class ChargebyteBoard:
         return StatusPWMGeneration(response[0])
 
 
-    def get_ucp(self) -> tuple[int,int]:
+    def get_cp(self) -> tuple[int,int]:
         """
         Device-Get-Ucp is the request for the control pilot (CP) voltage. Due to the fact that the voltage is changing with 1 kHz, the highest and lowest voltage value will be measured. The data resolution is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit. The corresponding request and response are given in the tables below.
         """
@@ -245,14 +238,23 @@ class ChargebyteBoard:
         return positive_cp, negative_cp
 
 
-    def set_ucp(self, resistance:ResistorValue) -> int:
+    def set_cp(self, resistance:int) -> int:
         """
         This service switches the load resistors for the CP signal.
         The status of every switch will be stated in the parameter as independend bits, where a bit that is set (1) means that the load resistor is connected and a reset bit (0) means that the resistor is not connected. The parameter resistance of the response should match the request parameter
         The parameter resistance is defined only by the 3 LSB bits.
         """
 
-        self.send_packet(0x15, bytearray([resistance]))
+        resistance_bits = 0
+        if resistance >= 2700:
+            resistance_bits |= 1
+            resistance -= 2700
+        if resistance >= 1300:
+            resistance_bits |= (1<<1)
+            resistance -= 1300
+        if resistance >= 347:
+            resistance_bits |= (1<<2)
+        self.send_packet(0x15, bytearray([resistance_bits]))
         response = self.get_response(0x15)
         self.check_response_length(response,1)
         return int(response[0])
