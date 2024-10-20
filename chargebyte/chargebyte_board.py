@@ -229,9 +229,10 @@ class ChargebyteBoard:
 
     def set_cp(self, resistance: int) -> int:
         """
-        This service switches the load resistors for the CP signal.
+        This service switches the load resistors for the CP signal
         The status of every switch will be stated in the parameter as independend bits, where a bit that is set (1) means that the load resistor is connected and a reset bit (0) means that the resistor is not connected. The parameter resistance of the response should match the request parameter
         The parameter resistance is defined only by the 3 LSB bits.
+        Note: that not every number can be set. only combinations of: 347, 1300, 2700.
         """
 
         resistance_bits = 0
