@@ -1,13 +1,15 @@
-import chargebyte_board
 from base_classes import ElectricVehicle
+import chargebyte_board
+from typing import override
+import sys
+sys.path.append('..')
 
 
 class CharbyteVehicle(ElectricVehicle):
 
     def __init__(self, host, port):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
-        self.frequency = 1000 #most used frequency, we can change later
-
+        self.frequency = 1000  # most used frequency, we can change later
 
     @override
     def get_state(self) -> ChargingState:
@@ -17,24 +19,22 @@ class CharbyteVehicle(ElectricVehicle):
             return ChargingState.A
         if abs(positive_voltage - 9) <= precision_interval:
             return ChargingState.B
-        if abs( positive_voltage - 6 ) <= precision_interval:
+        if abs(positive_voltage - 6) <= precision_interval:
             return ChargingState.C
-        if abs( positive_voltage - 3 ) <= precision_interval:
+        if abs(positive_voltage - 3) <= precision_interval:
             return ChargingState.D
-        if abs( positive_voltage - 0 ) <= precision_interval:
+        if abs(positive_voltage - 0) <= precision_interval:
             return ChargingState.E
         return ChargingState.E
 
-
     @override
     def set_cable_lock(self, locked: bool):
-        if(locked):
+        if (locked):
             self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
             self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(1))
         else:
             self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(0))
             self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(0))
-
 
     @override
     def get_pwm_duty_cycle(self) -> float:
@@ -42,12 +42,8 @@ class CharbyteVehicle(ElectricVehicle):
         duty_cycle = float(duty_cycle)*0.1
         return duty_cycle
 
-
     @override
-    def set_max_charge_current(self, max_current:float)->None:
+    def set_max_charge_current(self, max_current: float) -> None:
         ##
         pass
-        #cbb.activate_proximity_pilot_resistor()
-
-
-
+        # cbb.activate_proximity_pilot_resistor()
