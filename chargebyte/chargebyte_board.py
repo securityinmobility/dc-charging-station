@@ -86,7 +86,6 @@ class ChargebyteBoard:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
         self.socket.settimeout(15.0)
-        self.answers = []
         self.mutex = Lock()
 
     def send_packet(self, service_id: int, payload: bytearray) -> None:
@@ -94,12 +93,10 @@ class ChargebyteBoard:
         self.read_response()
 
     def get_response(self, service_id: int) -> bytearray:
-        for response in self.answers:
-            if response[3] == service_id + 0x80:
-                self.mutex.acquire()
-                self.answers.remove(response)
-                self.mutex.release()
-                return self.parse_response(response)
+        if response[3] == service_id + 0x80:
+            self.mutex.acquire()
+            self.mutex.release()
+            return self.parse_response(response)
         raise Exception("we didnt get an answer")
 
     def build_message(self, service_id: int, payload: bytearray) -> bytearray:
@@ -124,16 +121,14 @@ class ChargebyteBoard:
         while len(data) < full_len:
             data += self.socket.recv(full_len - len(data))
         self.check_response(data)
-        if data[3] != 0xC0:
-            self.answers.append(data)
-        else:
-            pass
+        # if data[3] != 0xC0:
+        #    self.answers.append(data)
 
     def check_response(self, response: bytearray):
         if response[0] != 0x02:
             raise ChargebyteException("beginning of message was not 0x02")
-        if self.calculate_checksum(response[:-1]) != response[-1]:
-            raise ChargebyteException("Something went wrong: the check block is wrong!")
+        # if self.calculate_checksum(response[:-1]) != response[-1]:
+        #    raise ChargebyteException("Something went wrong: the check block is wrong!")
 
     def check_response_length(self, response: list, length: int) -> None:
         if len(response) != length:
@@ -295,8 +290,9 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return StatusCode(response[0])
 
-    def cyclic_process_data(self, response) -> tuple[int, int, int, int]:
-        # response = self.read_response()
+    def cyclic_process_data(self) -> tuple[int, int, int, int]:
+        """TODO:"""
+        response = self.get_response("0xC0")
         ti = join_bytes(response[4], response[5])
         positive_cp = join_bytes(response[6], response[7])
         negative_cp = join_bytes(response[8], response[9])
