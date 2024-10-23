@@ -90,14 +90,3 @@ class CharbyteChargingStation(ChargingStation):
         if state == ChargingStation.C or state == ChargingStation.D:
             return True
         return False
-
-    @override
-    def get_max_charge_current(self):
-        """returns the voltage in Volts
-        converts the volt from the hardware, which has the resolution of 29mV/bit to volts
-        """
-        return float(self.cbb.get_voltage_of_proximity_signal()) * 29.0 / 1000.0
-
-    @override
-    def set_max_charge_current(self, current: int):
-        pass
