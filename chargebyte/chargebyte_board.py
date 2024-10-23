@@ -143,9 +143,6 @@ class ChargebyteBoard:
 
         return (high_byte << 8) | low_byte
 
-    def keep_service_alive():
-        pass
-
     def test_device_one(self) -> tuple[int, int, ResetType]:
         """This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor"""
 
@@ -177,7 +174,7 @@ class ChargebyteBoard:
         duty_cicle = self.join_bytes(response[2], response[3])
         return frequency, duty_cicle
 
-    def set_pwm(self, frequency: int, dutycycle: int) -> ControlCode:
+    def set_pwm(self, frequency: int, dutycycle: int) -> ErrorCode:
         """The pulse width of the PWM signal can be set by sending the device-set PWM service with the resolution 0.1 % and modulation frequency Fi in Hz (normally 1000). This command requires that the PWM generation is already on."""
 
         low_freq = frequency & 0xFF
@@ -187,7 +184,7 @@ class ChargebyteBoard:
         self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
         response = self.read_response(0x11)
         self.check_response_length(response, 1)
-        return ControlCode(response[0])
+        return ErrorCode(response[0])
 
     def control_pwm(self, control_code: ControlCode) -> StatusPWMGeneration:
         """The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control."""
