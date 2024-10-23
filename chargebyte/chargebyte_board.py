@@ -326,7 +326,7 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
 
-    def enable_pullup_resistor(self) -> int:
+    def enable_proximity_pilot_pullup_5V(self) -> int:
         """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be activated with this service
         Control=0 deactivates the pullup, all other values activate the pullup
         """
@@ -336,7 +336,7 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return response[0]
 
-    def disable_pullup_resistor(self) -> int:
+    def disable_proximity_pilot_pullup_5V(self) -> int:
         """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup."""
 
         self.send_packet(0x51, bytearray([0x00]))
