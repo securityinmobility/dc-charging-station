@@ -79,7 +79,7 @@ class ChargebyteBoard:
     def __init__(self, host: str, port: int):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
-        self.socket.settimeout(15.0)
+        self.socket.settimeout(3.0)
         self.mutex = Lock()
 
     def send_packet(self, service_id: int, payload: bytearray) -> None:
