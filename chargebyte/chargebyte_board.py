@@ -60,6 +60,11 @@ class LockStatus(Enum):
     NOT_CONNECTED = 2
 
 
+class CableLock(Enum):
+    LOCK = 0
+    UNLOCK = 1
+
+
 class ErrorCode(Enum):
     NO_ERROR = 0
     INVALID_PARAMETER = 1
@@ -232,14 +237,14 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return int(response[0])
 
-    def lock_unlock_cable_one(self, command: ControlCode) -> LockStatus:
+    def lock_unlock_cable_one(self, command: CableLock) -> LockStatus:
         """The device supports two separate locks for locking the charging sockets."""
-        self.send_packet(0x17, bytearray([command]))
+        self.send_packet(0x17, bytearray([command.value]))
         response = self.get_response(0x17)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
 
-    def lock_unlock_cable_two(self, command: ControlCode) -> LockStatus:
+    def lock_unlock_cable_two(self, command: CableLock) -> LockStatus:
         """The device supports two separate locks for locking the charging sockets.
 
         A connected DC motor is driven into either lock or unlock position dependingon the command value.
@@ -249,7 +254,7 @@ class ChargebyteBoard:
         The motor fault service could be used to get more information about failures.
         """
 
-        self.send_packet(0x18, bytearray([command]))
+        self.send_packet(0x18, bytearray([command.value]))
         response = self.get_response(0x18)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
