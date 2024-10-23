@@ -53,27 +53,11 @@ class TestChargeboardByte:
 
     def test_check_block_sum(self, control):
         data = [0x10, 0x00, 0x01]
-        expected = 0x11
+        expected = bytearray(b"\x11")
         assert control.calculate_checksum(data) == expected
-
-    #    def test_should_check_length(self,control,mock_socket):
-    #        data = bytearray([0x02,0x06,0x00,0x95,0x15,0x07,0x02])
-    #        set_recv(data, mock_socket)
-    #        with pytest.raises(Exception) as info:
-    #            control.set_cp(2)
-    #        assert info.value.args[0] == 'Something went wrong, the response has an unexpected length!'
-
-    #    def test_should_verify_service_id(self,control,mock_socket):
-    #        data = bytearray([0x02,0x06,0x00,0x81,0x81,0x81,0x02])
-    #        set_recv(data, mock_socket)
-    #        with pytest.raises(Exception) as info:
-    #            control.send_packet(0x51, bytearray())
-    #            answer = control.get_response(0x51)
-    #            print(answer)
-    #        assert info.value.args[0] == 'we didnt get an answer'
-
-    def test_should_time_out(self, control, mock_socket):
-        pass  # i dont know how to implement this one
+        array = bytearray.fromhex("02060084290004")
+        expected = bytearray.fromhex("ad")
+        assert control.calculate_checksum(array) == expected
 
     def test_incorrect_checksum(self, control, mock_socket):
         data = bytearray([0x02, 0x06, 0x00, 0x81, 0x81, 0x81, 0x02])
