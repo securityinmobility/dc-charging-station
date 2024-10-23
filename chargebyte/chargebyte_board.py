@@ -10,13 +10,13 @@ sys.path.append("..")
 
 
 class ResistorCode(Enum):
-    Ω_2700 = 0
-    Ω_150 = 1
-    Ω_487 = 2
-    Ω_1500 = 3
-    Ω_680 = 4
-    Ω_220 = 5
-    Ω_100 = 6
+    Ohm_2700 = 0
+    Ohm_150 = 1
+    Ohm_487 = 2
+    Ohm_1500 = 3
+    Ohm_680 = 4
+    Ohm_220 = 5
+    Ohm_100 = 6
     OFF = 7
 
 
@@ -89,14 +89,6 @@ class ChargebyteBoard:
 
     def send_packet(self, service_id: int, payload: bytearray) -> None:
         self.socket.send(self.build_message(service_id, payload))
-        self.read_response()
-
-    def get_response(self, service_id: int) -> bytearray:
-        if response[3] == service_id + 0x80:
-            self.mutex.acquire()
-            self.mutex.release()
-            return self.parse_response(response)
-        raise Exception("we didnt get an answer")
 
     def build_message(self, service_id: int, payload: bytearray) -> bytearray:
         if not isinstance(service_id, int):
@@ -110,7 +102,7 @@ class ChargebyteBoard:
         )
         return header + bytearray([self.calculate_checksum(header)])
 
-    def read_response(self) -> bytearray:
+    def read_response(self, service) -> bytearray:
         beginning = self.socket.recv(1)
         length = self.socket.recv(1)
         if len(beginning) == 0 or len(length) == 0:
@@ -120,8 +112,7 @@ class ChargebyteBoard:
         while len(data) < full_len:
             data += self.socket.recv(full_len - len(data))
         self.check_response(data)
-        # if data[3] != 0xC0:
-        #    self.answers.append(data)
+        return data
 
     def check_response(self, response: bytearray):
         if response[0] != 0x02:
@@ -156,7 +147,7 @@ class ChargebyteBoard:
         """This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor"""
 
         self.send_packet(0x01, bytearray())
-        response = self.get_response(0x01)
+        response = self.read_response(0x01)
         self.check_response_length(response, 3)
         software_version = response[0]
         hardware_version = response[1]
@@ -167,7 +158,7 @@ class ChargebyteBoard:
         """This service gives access to reset causes (i.e. why the coprocessor restarted) as well as the software build number"""
 
         self.send_packet(0x04, bytearray())
-        response = self.get_response(0x04)
+        response = self.read_response(0x04)
         self.check_response_length(response, 3)
         build = self.join_bytes(response[0], response[1])
         last_reset_reason = ResetReason(response[2])
@@ -177,7 +168,7 @@ class ChargebyteBoard:
         """The pulse width of the PWM signal can be read by sending the device-get PWM service."""
 
         self.send_packet(0x10, bytearray())
-        response = self.get_response(0x10)
+        response = self.read_response(0x10)
         self.check_response_length(response, 4)
         frequency = self.join_bytes(response[0], response[1])
         duty_cicle = self.join_bytes(response[2], response[3])
@@ -191,7 +182,7 @@ class ChargebyteBoard:
         low_duty = dutycycle & 0xFF
         high_duty = (dutycycle >> 8) & 0xFF
         self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
-        response = self.get_response(0x11)
+        response = self.read_response(0x11)
         self.check_response_length(response, 1)
         return ControlCode(response[0])
 
@@ -199,7 +190,7 @@ class ChargebyteBoard:
         """The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control."""
 
         self.send_packet(0x12, bytearray([control_code]))
-        response = self.get_response(0x12)
+        response = self.read_response(0x12)
         self.check_response_length(response, 1)
         return StatusPWMGeneration(response[0])
 
@@ -209,7 +200,7 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x14, bytearray())
-        response = self.get_response(0x14)
+        response = self.read_response(0x14)
         self.check_response_length(response, 4)
         positive_cp = self.join_bytes(response[0], response[1])
         negative_cp = self.join_bytes(response[2], response[3])
@@ -233,14 +224,14 @@ class ChargebyteBoard:
         if resistance >= 347:
             resistance_bits |= 1 << 2
         self.send_packet(0x15, bytearray([resistance_bits]))
-        response = self.get_response(0x15)
+        response = self.read_response(0x15)
         self.check_response_length(response, 1)
         return int(response[0])
 
     def lock_unlock_cable_one(self, command: CableLock) -> LockStatus:
         """The device supports two separate locks for locking the charging sockets."""
         self.send_packet(0x17, bytearray([command.value]))
-        response = self.get_response(0x17)
+        response = self.read_response(0x17)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
 
@@ -255,7 +246,7 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x18, bytearray([command.value]))
-        response = self.get_response(0x18)
+        response = self.read_response(0x18)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
 
@@ -270,7 +261,7 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x1A, bytearray())
-        response = self.get_response(0x1A)
+        response = self.read_response(0x1A)
         self.check_response_length(response, 1)
         response = response[0]
         if response != 0:
@@ -285,13 +276,13 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x20, bytearray([interval]))
-        response = self.get_response(0x20)
+        response = self.read_response(0x20)
         self.check_response_length(response, 1)
         return StatusCode(response[0])
 
     def cyclic_process_data(self) -> tuple[int, int, int, int]:
         """TODO:"""
-        response = self.get_response("0xC0")
+        response = self.read_response("0xC0")
         ti = join_bytes(response[4], response[5])
         positive_cp = join_bytes(response[6], response[7])
         negative_cp = join_bytes(response[8], response[9])
@@ -309,7 +300,7 @@ class ChargebyteBoard:
         if parameter > 255 or parameter < 1:
             raise ValueError("This parameter is defined between 1 and 255!")
         self.send_packet(0x31, bytearray([parameter]))
-        response = self.get_response(0x31)
+        response = self.read_response(0x31)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
 
@@ -319,15 +310,15 @@ class ChargebyteBoard:
         No direct response is sent, we may wait for the first message on Device initialization to double check the reset was performed. The POR message on initialization is currently set to zero.
         """
         self.send_packet(0x33, bytearray())
-        # response = self.get_response(0x33)
+        # response = self.read_response(0x33)
         # self.check_response_length(response,1)
         # return response[0]
 
     def activate_proximity_pilot_resistor(self, control: ResistorCode) -> ErrorCode:
         """This service enables or disables resistors that load the proximity signal. These resistors are switched between proximity and GND."""
 
-        self.send_packet(0x50, bytearray([control]))
-        response = self.get_response(0x50)
+        self.send_packet(0x50, bytearray([control.value]))
+        response = self.read_response(0x50)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
 
@@ -337,7 +328,7 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x51, bytearray([0x03]))
-        response = self.get_response(0x51)
+        response = self.read_response(0x51)
         self.check_response_length(response, 1)
         return response[0]
 
@@ -345,7 +336,7 @@ class ChargebyteBoard:
         """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup."""
 
         self.send_packet(0x51, bytearray([0x00]))
-        response = self.get_response(0x51)
+        response = self.read_response(0x51)
         self.check_response_length(response, 1)
         return response[0]
 
@@ -356,7 +347,7 @@ class ChargebyteBoard:
         """
 
         self.send_packet(0x52, bytearray())
-        response = self.get_response(0x52)
+        response = self.read_response(0x52)
         self.check_response_length(response, 2)
         byte_voltage = self.join_bytes(response[0], response[1])
         return float(byte_voltage) * 0.029
