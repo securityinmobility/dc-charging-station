@@ -344,7 +344,7 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return response[0]
 
-    def get_voltage_of_proximity_signal(self) -> int:
+    def get_voltage_of_proximity_signal(self) -> float:
         """The service requests the measured voltage at the proximity pilot pin. The resolution is 29 mV/LSB.
 
         return value: is the voltage.
@@ -354,4 +354,4 @@ class ChargebyteBoard:
         response = self.get_response(0x52)
         self.check_response_length(response, 2)
         byte_voltage = self.join_bytes(response[0], response[1])
-        return byte_voltage
+        return float(byte_voltage) * 0.029
