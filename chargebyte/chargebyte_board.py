@@ -103,10 +103,12 @@ class ChargebyteBoard:
         return header + bytearray([self.calculate_checksum(header)])
 
     def read_response(self, service) -> bytearray:
-        beginning = self.socket.recv(1)
+        while self.socket.recv(1) != 0x02:
+            pass
+        beginning = 0x02
         length = self.socket.recv(1)
-        if len(beginning) == 0 or len(length) == 0:
-            raise ChargebyteException("No data returned when trying to read response")
+        # if len(beginning) == 0 or len(length) == 0:
+        #    raise ChargebyteException("No data returned when trying to read response")
         full_len = int(length[0]) + 2
         data = bytearray(beginning + length)
         while len(data) < full_len:
@@ -129,11 +131,12 @@ class ChargebyteBoard:
     def parse_response(self, response: bytearray) -> bytearray:
         return response[4:-1]
 
-    def calculate_checksum(self, numbers: bytearray) -> int:
-        response = 0
+    def calculate_checksum(self, numbers: bytearray) -> bytearray:
+        """Returns XOR of all the elements in the bytearray"""
+        checksum = 0
         for num in numbers:
-            response = response ^ num
-        return response
+            checksum ^= num
+        return bytearray([checksum])
 
     def join_bytes(self, low_byte: int, high_byte: int) -> int:
         """join the 2 bytes on a single number"""
