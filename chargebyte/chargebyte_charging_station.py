@@ -6,7 +6,7 @@ import sys
 sys.path.append("..")
 
 
-class CharbyteChargingStation(ChargingStation):
+class ChargebyteChargingStation(ChargingStation):
     def __init__(self, host, port):
         """receives host and port. sets frequency to the most used frequency of 1000Hz."""
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
