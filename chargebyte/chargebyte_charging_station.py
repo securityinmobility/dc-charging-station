@@ -63,6 +63,9 @@ class ChargebyteChargingStation(ChargingStation):
         """
         self.cbb.control_pwm(chargebyte_board.ControlCode(1))
 
+    def get_max_charge_current(self) -> ProximityPilotResitorValue:
+        return self.cbb.get_voltage_of_proximity_signal()
+
     @override
     def get_state(self) -> ChargingState:
         """returns ChargingState enum.
