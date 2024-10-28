@@ -6,7 +6,7 @@ import sys
 sys.path.append("..")
 
 
-class CharbyteVehicle(ElectricVehicle):
+class ChargebyteVehicle(ElectricVehicle):
     def __init__(self, host, port):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000  # most used frequency, we can change later
