@@ -81,12 +81,3 @@ class ChargebyteChargingStation(ChargingStation):
         if abs(positive_voltage - 0) <= precision_interval:
             return ChargingState.E
         return ChargingState.E
-
-    def is_charging_possible(self) -> bool:
-        """Returns bool
-        tells if we can initiate the chargind
-        """
-        state = this.get_state()
-        if state == ChargingStation.C or state == ChargingStation.D:
-            return True
-        return False
