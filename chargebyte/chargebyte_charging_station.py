@@ -2,15 +2,29 @@ from base_classes import ChargingStation, ChargingState
 import chargebyte_board
 from typing_extensions import override
 import sys
+from time import sleep
 
 sys.path.append("..")
 
 
 class ChargebyteChargingStation(ChargingStation):
-    def __init__(self, host, port):
+    def __init__(
+        self, host, port, set_pp_resistor: bool = False, resistance: int = 100
+    ):
         """receives host and port. sets frequency to the most used frequency of 1000Hz."""
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000  # most used frequency, we can change later
+        if set_pp_resistor:
+            self.cbb.activate_proximity_pilot_resistor(
+                chargebyte_board.ResistorCode.Ohm_100
+            )
+        self.cbb.enable_proximity_pilot_pullup_5V()
+        # set constant 12V output (or PWM) ?
+        while self.get_state() == ChargingState.A:
+            sleep(2.0 / 100)
+        self.cbb.set_pwm(self.frequency, 50)
+        while self.get_state() == ChargingState.B:
+            sleep(2.0 / 100)
 
     @override
     def set_cable_lock(self, locked: bool):
