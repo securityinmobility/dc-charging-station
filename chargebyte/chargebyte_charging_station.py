@@ -18,6 +18,7 @@ class ChargebyteChargingStation(ChargingStation):
             self.cbb.activate_proximity_pilot_resistor(
                 chargebyte_board.ResistorCode.Ohm_100
             )
+        self.cbb.control_pwm(chargebyte_board.ControlCode.ENABLE)
         self.cbb.enable_proximity_pilot_pullup_5V()
         # set constant 12V output (or PWM) ?
         while self.get_state() == ChargingState.A:
