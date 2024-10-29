@@ -1,15 +1,35 @@
 from base_classes import ElectricVehicle
 import chargebyte_board
+from chargebyte_board import ChargingState
 from typing import override
 import sys
+from time import sleep
 
 sys.path.append("..")
 
 
 class ChargebyteVehicle(ElectricVehicle):
-    def __init__(self, host, port):
+    def __init__(
+        self,
+        host,
+        port,
+        cp_resistance: int,
+        set_pp_resistor: bool = False,
+        resistance: int = 100,
+    ):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
         self.frequency = 1000  # most used frequency, we can change later
+        if set_pp_resistor:
+            self.cbb.activate_proximity_pilot_resistor(
+                chargebyte_board.ResistorCode.Ohm_100
+            )
+        self.cbb.disable_proximity_pilot_pullup_5V()
+        self.cbb.control_pwm(chargebyte_board.ControlCode.DISABLE)
+        self.cbb.set_cp(cp_resistance)
+        while self.get_state() == ChargingState.A:
+            sleep(2.0 / 100)
+        sleep(1)
+        # set second CP resistor
 
     @override
     def get_state(self) -> ChargingState:
