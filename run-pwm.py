@@ -1,0 +1,18 @@
+import time
+from chargebyte.chargebyte_board import ChargebyteBoard, ControlCode, ResistorCode
+
+# run the following command on the chargebyte board to make this work:
+# socat tcp-l:2020,reuseaddr,fork,crlf file:/dev/ttyAPP2,echo=0,b57600,raw
+
+board = ChargebyteBoard("192.168.188.250", 2020)
+
+#board.enable_pullup_resistor()
+board.activate_proximity_pilot_resistor(ResistorCode.Ω_1500.value)
+time.sleep(1)
+
+board.control_pwm(ControlCode.ENABLE.value)
+board.set_pwm(1000, 50)
+time.sleep(1)
+
+print(board.get_pwm())
+print(board.get_cp())
