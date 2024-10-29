@@ -100,17 +100,21 @@ class ChargebyteBoard:
             bytearray([start_of_message, length_of_message, device_adress, service_id])
             + payload
         )
-        return header + bytearray([self.calculate_checksum(header)])
+        return header + self.calculate_checksum(header)
 
     def read_response(self, service) -> bytearray:
-        while self.socket.recv(1) != 0x02:
-            pass
-        beginning = 0x02
+        # while self.socket.recv(1) != 0x02:
+        #    pass
+        while True:
+            beginning = self.socket.recv(1)
+            print(beginning)
+            if beginning == bytearray(b"\x02"):
+                break
         length = self.socket.recv(1)
         # if len(beginning) == 0 or len(length) == 0:
         #    raise ChargebyteException("No data returned when trying to read response")
         full_len = int(length[0]) + 2
-        data = bytearray(beginning + length)
+        data = beginning + length
         while len(data) < full_len:
             data += self.socket.recv(full_len - len(data))
         self.check_response(data)
@@ -148,7 +152,7 @@ class ChargebyteBoard:
 
         self.send_packet(0x01, bytearray())
         response = self.read_response(0x01)
-        self.check_response_length(response, 3)
+        self.check_response_length(response, 8)
         software_version = response[0]
         hardware_version = response[1]
         last_reset_reason = ResetType(response[-1])
@@ -159,7 +163,7 @@ class ChargebyteBoard:
 
         self.send_packet(0x04, bytearray())
         response = self.read_response(0x04)
-        self.check_response_length(response, 3)
+        self.check_response_length(response, 8)
         build = self.join_bytes(response[0], response[1])
         last_reset_reason = ResetReason(response[2])
         return build, last_reset_reason
@@ -189,7 +193,7 @@ class ChargebyteBoard:
     def control_pwm(self, control_code: ControlCode) -> StatusPWMGeneration:
         """The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control."""
 
-        self.send_packet(0x12, bytearray([control_code]))
+        self.send_packet(0x12, bytearray([control_code.value]))
         response = self.read_response(0x12)
         self.check_response_length(response, 1)
         return StatusPWMGeneration(response[0])
