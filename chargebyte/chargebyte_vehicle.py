@@ -10,26 +10,21 @@ sys.path.append("..")
 
 class ChargebyteVehicle(ElectricVehicle):
     def __init__(
-        self,
-        host,
-        port,
-        cp_resistance: int,
-        set_pp_resistor: bool = False,
-        resistance: int = 100,
+        self, host, port, set_pp_resistor: bool = False, resistance: int = 100
     ):
         self.cbb = chargebyte_board.ChargebyteBoard(host, port)
-        self.frequency = 1000  # most used frequency, we can change later
+        self.frequency = 1000
         if set_pp_resistor:
             self.cbb.activate_proximity_pilot_resistor(
                 chargebyte_board.ResistorCode.Ohm_100
             )
         self.cbb.disable_proximity_pilot_pullup_5V()
         self.cbb.control_pwm(chargebyte_board.ControlCode.DISABLE)
-        self.cbb.set_cp(cp_resistance)
+        self.cbb.set_cp(2700)
         while self.get_state() == ChargingState.A:
             sleep(2.0 / 100)
         sleep(1)
-        # set second CP resistor
+        self.cbb.set_cp(2700 + 1300)
 
     @override
     def get_state(self) -> ChargingState:
