@@ -103,20 +103,15 @@ class ChargebyteBoard:
         return header + self.calculate_checksum(header)
 
     def read_response(self, service) -> bytearray:
-        # while self.socket.recv(1) != 0x02:
-        #    pass
         while True:
             beginning = self.socket.recv(1)
-            print(beginning)
             if beginning == bytearray(b"\x02"):
                 break
         length = self.socket.recv(1)
-        # if len(beginning) == 0 or len(length) == 0:
-        #    raise ChargebyteException("No data returned when trying to read response")
         full_len = int(length[0]) + 2
-        data = beginning + length
+        data = bytearray(beginning) + bytearray(length)
         while len(data) < full_len:
-            data += self.socket.recv(full_len - len(data))
+            data += bytearray(self.socket.recv(full_len - len(data)))
         self.check_response(data)
         return data
 
@@ -126,7 +121,7 @@ class ChargebyteBoard:
         if self.calculate_checksum(response[:-1]) != response[-1]:
             raise ChargebyteException("Something went wrong: the check block is wrong!")
 
-    def check_response_length(self, response: list, length: int) -> None:
+    def check_response_length(self, response: bytearray, length: int) -> None:
         if len(response) != length:
             raise Exception(
                 "Something went wrong, the response has an unexpected length!"
@@ -267,9 +262,9 @@ class ChargebyteBoard:
         self.send_packet(0x1A, bytearray())
         response = self.read_response(0x1A)
         self.check_response_length(response, 1)
-        response = response[0]
-        if response != 0:
-            response = 1
+        status_code = int(response[0])
+        if status_code != 0:
+            status_code = 1
         return StatusCode(response)
 
     def set_cyclic_process_data(self, interval: int) -> StatusCode:
@@ -287,10 +282,10 @@ class ChargebyteBoard:
     def cyclic_process_data(self) -> tuple[int, int, int, int]:
         """TODO:"""
         response = self.read_response("0xC0")
-        ti = join_bytes(response[4], response[5])
-        positive_cp = join_bytes(response[6], response[7])
-        negative_cp = join_bytes(response[8], response[9])
-        lock_status = join_bytes(response[10], [11])
+        ti = self.join_bytes(response[4], response[5])
+        positive_cp = self.join_bytes(response[6], response[7])
+        negative_cp = self.join_bytes(response[8], response[9])
+        lock_status = self.join_bytes(response[10], response[11])
         return ti, positive_cp, negative_cp, lock_status
 
     def push_button_simple_connect(self, parameter: int) -> ErrorCode:
@@ -308,7 +303,7 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
 
-    def reset(self) -> int:
+    def reset(self) -> None:
         """Executes a software reset on device
 
         No direct response is sent, we may wait for the first message on Device initialization to double check the reset was performed. The POR message on initialization is currently set to zero.
