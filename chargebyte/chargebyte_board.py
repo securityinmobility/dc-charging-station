@@ -123,8 +123,8 @@ class ChargebyteBoard:
     def check_response(self, response: bytearray):
         if response[0] != 0x02:
             raise ChargebyteException("beginning of message was not 0x02")
-        # if self.calculate_checksum(response[:-1]) != response[-1]:
-        #    raise ChargebyteException("Something went wrong: the check block is wrong!")
+        if self.calculate_checksum(response[:-1]) != response[-1]:
+            raise ChargebyteException("Something went wrong: the check block is wrong!")
 
     def check_response_length(self, response: list, length: int) -> None:
         if len(response) != length:
