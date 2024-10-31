@@ -1,5 +1,10 @@
-from base_classes import ChargingStation, ChargingState
-import chargebyte_board
+from base_classes import ChargingStation, ChargingState, ProximityPilotResitorValue
+from chargebyte.chargebyte_board import (
+    ChargebyteBoard,
+    ResistorCode,
+    ControlCode,
+    CableLock,
+)
 from typing_extensions import override
 import sys
 from time import sleep
@@ -12,13 +17,11 @@ class ChargebyteChargingStation(ChargingStation):
         self, host, port, set_pp_resistor: bool = False, resistance: int = 100
     ):
         """receives host and port. sets frequency to the most used frequency of 1000Hz."""
-        self.cbb = chargebyte_board.ChargebyteBoard(host, port)
+        self.cbb = ChargebyteBoard(host, port)
         self.frequency = 1000  # most used frequency, we can change later
         if set_pp_resistor:
-            self.cbb.activate_proximity_pilot_resistor(
-                chargebyte_board.ResistorCode.Ohm_100
-            )
-        self.cbb.control_pwm(chargebyte_board.ControlCode.ENABLE)
+            self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_100)
+        self.cbb.control_pwm(ControlCode.ENABLE)
         self.cbb.enable_proximity_pilot_pullup_5V()
         # set constant 12V output (or PWM) ?
         while self.get_state() == ChargingState.A:
@@ -33,11 +36,11 @@ class ChargebyteChargingStation(ChargingStation):
         Can be used to lock or unlock both cables. if locked is True, both cables will be locked, otherwise both will be unlocked. Doesn't check for the current situation.
         """
         if locked:
-            self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(1))
-            self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(1))
+            self.cbb.lock_unlock_cable_one(CableLock(1))
+            self.cbb.lock_unlock_cable_two(CableLock(1))
         else:
-            self.cbb.lock_unlock_cable_one(chargebyte_board.ControlCode(0))
-            self.cbb.lock_unlock_cable_two(chargebyte_board.ControlCode(0))
+            self.cbb.lock_unlock_cable_one(CableLock(0))
+            self.cbb.lock_unlock_cable_two(CableLock(0))
 
     def is_vehicle_detected(self) -> bool:
         """Returns bools
@@ -47,14 +50,14 @@ class ChargebyteChargingStation(ChargingStation):
             return True
         return False
 
-    def get_pwm(self) -> [int, float]:
+    def get_pwm(self) -> tuple:
         """returns one int and one float
 
         the int represents the frequency in Hz
         the float represents the dutycycle, with precision 0.1
         """
-        frequency, duty_cycle = self.bcc.get_pwm()
-        duty_cycle = float(duty_cycle) * 0.1
+        frequency, duty_cycle_int = self.cbb.get_pwm()
+        duty_cycle = float(duty_cycle_int) * 0.1
         return frequency, duty_cycle
 
     def get_pwm_duty_cycle(self):
@@ -79,7 +82,17 @@ class ChargebyteChargingStation(ChargingStation):
         self.cbb.control_pwm(chargebyte_board.ControlCode(1))
 
     def get_max_charge_current(self) -> ProximityPilotResitorValue:
-        return self.cbb.get_voltage_of_proximity_signal()
+        precision = 3
+        resistance = self.cbb.get_voltage_of_proximity_signal()
+        if resistance - 100 <= precision:
+            return ProximityPilotResitorValue(100)
+        if resistance - 220 <= precision:
+            return ProximityPilotResitorValue(220)
+        if resistance - 680 <= precision:
+            return ProximityPilotResitorValue(680)
+        if resistance - 1500 <= precision:
+            return ProximityPilotResitorValue(1500)
+        raise Exception("Something went wrong: unexpected result for resistance")
 
     @override
     def get_state(self) -> ChargingState:
