@@ -149,6 +149,7 @@ class HighVoltageSource(ABC):
         appying a minimum and maximum voltage of `min_voltage` and
         `max_voltage` Volts respectively.
         Positive `current` means charging, negative means discharging.
+        When 0 is given for all parameter output shall be turned off.
 
         If the device supports only one of charging and discharging, but the
         other one is requested, this function shall throw a ValueError.
