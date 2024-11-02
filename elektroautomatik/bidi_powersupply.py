@@ -1,7 +1,10 @@
+import sys
 import easy_scpi as scpi
-from typing import List
+from typing import override, List
 
-from ..base_classes import HighVoltageSource
+from base_classes import HighVoltageSource
+
+sys.path.append("..")
 
 class ElektroAutomatikBidiPowersupply(HighVoltageSource):
     def __init__(self, ip: str, port: int, max_power: float):
@@ -25,7 +28,7 @@ class ElektroAutomatikBidiPowersupply(HighVoltageSource):
 
         self._raise_if_errors()
 
-    def _read_errors() -> List[str]:
+    def _read_errors(self) -> List[str]:
         result = []
         while True:
             msg = self.instrument.system.error.next()
@@ -34,29 +37,29 @@ class ElektroAutomatikBidiPowersupply(HighVoltageSource):
             result.append(msg)
         return result
 
-    def _raise_if_errors():
+    def _raise_if_errors(self):
         errs = self._read_errors()
         if len(errs) != 0:
             raise RuntimeError(f"powersupply reported errors {errs}")
 
     @override
-    def check_insulation() -> bool:
+    def check_insulation(self) -> bool:
         # TODO check error status bits of EA-PSB
         return True
 
     @override
-    def get_voltage() -> float:
+    def get_voltage(self) -> float:
         x = float(self.instrument.measure.voltage())
         self._raise_if_errors()
         return x
 
     @override
-    def get_current() -> float:
+    def get_current(self) -> float:
         x = float(self.instrument.measure.current())
         self._raise_if_errors()
         return x
 
-    def _is_zero_or_nan(x) -> bool:
+    def _is_zero_or_nan(self, x) -> bool:
         return x is None or x == 0
 
     @override
