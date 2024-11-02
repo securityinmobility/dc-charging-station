@@ -371,10 +371,10 @@ class Kratzer:
         self.mutex.release()
 
     def initiate_threads(self) -> None:
-        thread_m2s = Thread(target=send_packet, args=())
-        thread_m2s.start()
-        thread_s2m = Thread(target=receive_package, args=())
-        thread_s2m.start()
+        self.thread_m2s = Thread(target=self.send_package, args=())
+        self.thread_m2s.start()
+        self.thread_s2m = Thread(target=self.receive_package, args=())
+        self.thread_s2m.start()
 
     def end_threads(self) -> None:
         self.stop_event.set()
@@ -389,10 +389,10 @@ class Kratzer:
     def catch_watchdog(self, bit_position: int):
         for i in range(30):
             self.receive_package()
-            if get_bit(self.s2m.values["S2M_AS_SW2"], bit_position):
+            if self.get_bit(self.s2m.values["S2M_AS_SW2"], bit_position):
                 break
             sleep(0.1)
-        if get_bit(self.s2m.values["S2M_AS_SW2"], bit_position) == 0:
+        if self.get_bit(self.s2m.values["S2M_AS_SW2"], bit_position) == 0:
             raise Exception("watchdog did not come")
 
     def request_control(self):
@@ -451,16 +451,16 @@ class Kratzer:
 
     def decode_signed_int(self, message: bytearray) -> int:
         if len(message) == 4:
-            return struct.unpack("i", message)[0]
-        return struct.unpack("h", message)[0]
+            return int(struct.unpack("i", message)[0])
+        return int(struct.unpack("h", message)[0])
 
     def decode_unsigned_int(self, message: bytearray) -> int:
         if len(message) == 4:
-            return struct.unpack("I", message)[0]
-        return struct.unpack("H", message)[0]
+            return int(struct.unpack("I", message)[0])
+        return int(struct.unpack("H", message)[0])
 
     def decode_float(self, message: bytearray) -> float:
-        return struct.unpack("f", message)[0]
+        return float(struct.unpack("f", message)[0])
 
     def build_message(self) -> bytearray:
         result = bytearray()
@@ -480,24 +480,28 @@ class Kratzer:
 
     def encode_signed_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return struct.pack("i", message)
+            return bytearray(struct.pack("i", message))
         if length == 2:
-            return struct.pack("h", message)
+            return bytearray(struct.pack("h", message))
+        raise Exception("wrong length")
 
     def encode_unsigned_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return struct.pack("I", message)
+            return bytearray(struct.pack("I", message))
         if length == 2:
-            return struct.pack("H", message)
+            return bytearray(struct.pack("H", message))
+        raise Exception("wrong length")
 
     def encode_float(self, message: float) -> bytearray:
-        return struct.pack("f", message)
+        return bytearray(struct.pack("f", message))
 
     def activate_VES(self) -> None:
-        self.set_M2S_RS_ACTIVE(1)
+        # self.set_M2S_RS_ACTIVE(1)
+        pass
 
     def deactivate_VES(self) -> None:
-        self.set_M2S_RS_ACTIVE(-1)
+        # self.set_M2S_RS_ACTIVE(-1)
+        pass
 
     def turn_off_VCU(self) -> None:
         pass
