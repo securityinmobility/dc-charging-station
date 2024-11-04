@@ -1,7 +1,8 @@
 import sys
+import socket
 
 sys.path.append("..")
-from kratzer import *
+from kratzer.kratzer import Kratzer
 import pytest
 from unittest import mock
 

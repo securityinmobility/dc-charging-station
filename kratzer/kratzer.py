@@ -480,16 +480,16 @@ class Kratzer:
 
     def encode_signed_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return bytearray(struct.pack("i", message))
+            return bytearray(struct.pack("i", int(message)))
         if length == 2:
-            return bytearray(struct.pack("h", message))
+            return bytearray(struct.pack("h", int(message)))
         raise Exception("wrong length")
 
     def encode_unsigned_int(self, message: int, length: int) -> bytearray:
         if length == 4:
-            return bytearray(struct.pack("I", message))
+            return bytearray(struct.pack("I", int(message)))
         if length == 2:
-            return bytearray(struct.pack("H", message))
+            return bytearray(struct.pack("H", int(message)))
         raise Exception("wrong length")
 
     def encode_float(self, message: float) -> bytearray:
