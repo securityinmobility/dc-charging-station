@@ -69,7 +69,7 @@ class TestChargeboardByte:
         except StopIteration:
             pass
         with pytest.raises(Exception) as info:
-            control.send_packet(0x01, bytearray())
+            control.read_response("0x01")
         assert info.value.args[0] == "Something went wrong: the check block is wrong!"
 
     def test_test_device_one(self, control, mock_socket):
