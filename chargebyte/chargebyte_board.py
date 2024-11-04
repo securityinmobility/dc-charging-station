@@ -117,9 +117,8 @@ class ChargebyteBoard:
         return data
 
     def check_response(self, response: bytearray):
-        pass
-        # if self.calculate_checksum(response[:-1]) != response[-1]:
-        #    raise ChargebyteException("Something went wrong: the check block is wrong!")
+        if self.calculate_checksum(response[:-1]) != bytearray([response[-1]]):
+            raise ChargebyteException("Something went wrong: the check block is wrong!")
 
     def check_response_length(self, response: bytearray, length: int) -> None:
         if len(response) != length:
