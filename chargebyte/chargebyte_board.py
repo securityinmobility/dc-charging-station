@@ -113,6 +113,7 @@ class ChargebyteBoard:
         while len(data) < full_len:
             data += bytearray(self.socket.recv(full_len - len(data)))
         self.check_response(data)
+        data = data[4:-1]
         return data
 
     def check_response(self, response: bytearray):
@@ -121,13 +122,10 @@ class ChargebyteBoard:
         #    raise ChargebyteException("Something went wrong: the check block is wrong!")
 
     def check_response_length(self, response: bytearray, length: int) -> None:
-        pass
-        """
         if len(response) != length:
             raise Exception(
                 "Something went wrong, the response has an unexpected length!"
             )
-        """
 
     def parse_response(self, response: bytearray) -> bytearray:
         return response[4:-1]
@@ -149,7 +147,7 @@ class ChargebyteBoard:
 
         self.send_packet(0x01, bytearray())
         response = self.read_response(0x01)
-        self.check_response_length(response, 8)
+        self.check_response_length(response, 3)
         software_version = response[0]
         hardware_version = response[1]
         last_reset_reason = ResetType(response[-1])
@@ -160,7 +158,7 @@ class ChargebyteBoard:
 
         self.send_packet(0x04, bytearray())
         response = self.read_response(0x04)
-        self.check_response_length(response, 8)
+        self.check_response_length(response, 3)
         build = self.join_bytes(response[0], response[1])
         last_reset_reason = ResetReason(response[2])
         return build, last_reset_reason
@@ -267,7 +265,7 @@ class ChargebyteBoard:
         status_code = int(response[0])
         if status_code != 0:
             status_code = 1
-        return StatusCode(response)
+        return StatusCode(status_code)
 
     def set_cyclic_process_data(self, interval: int) -> StatusCode:
         """The device is able to send cyclic data messages in a given interval. The messages contain the PWM values, the CP voltage and the plug lock status. The device-set request is given with the parameter interval. Valid values are in the range of 0..FF, where 0=off, 1=100ms, 2=200ms, etc..
