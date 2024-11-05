@@ -135,15 +135,25 @@ class TestChargeboardByte:
         proof_send_call(expected_request, mock_socket)
 
     def test_set_cp(self, control, mock_socket):
-        pass
-        """
-        data = bytearray([0x02,0x04,0x00,0x95,0x01])
+        data = bytearray([0x02, 0x04, 0x00, 0x95, 0x01])
         set_recv(data, mock_socket)
-        resistance = control.set_cp(1)
-        assert resistance == 1
-        expected_request = bytearray([0x02,0x04,0x00,0x15,0x01])
+        resistance = control.set_cp(2700)
+        expected_request = bytearray([0x02, 0x04, 0x00, 0x15, 0x01])
         proof_send_call(expected_request, mock_socket)
-        """
+
+    def test_set_cp_two_bits(self, control, mock_socket):
+        data = bytearray([0x02, 0x04, 0x00, 0x95, 0x01])
+        set_recv(data, mock_socket)
+        resistance = control.set_cp(2700 + 347)
+        expected_request = bytearray([0x02, 0x04, 0x00, 0x15, 0x05])
+        proof_send_call(expected_request, mock_socket)
+
+    def test_set_cp_three_bits(self, control, mock_socket):
+        data = bytearray([0x02, 0x04, 0x00, 0x95, 0x01])
+        set_recv(data, mock_socket)
+        resistance = control.set_cp(2700 + 347 + 1500)
+        expected_request = bytearray([0x02, 0x04, 0x00, 0x15, 0x07])
+        proof_send_call(expected_request, mock_socket)
 
     def test_lock_and_unlock_cable_one(self, control, mock_socket):
         data = bytearray([0x02, 0x04, 0x00, 0x97, 0x01])
