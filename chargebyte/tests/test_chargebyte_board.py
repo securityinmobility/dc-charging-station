@@ -73,17 +73,17 @@ class TestChargeboardByte:
         assert info.value.args[0] == "Something went wrong: the check block is wrong!"
 
     def test_test_device_one(self, control, mock_socket):
-        data = bytearray([0x02, 0x06, 0x00, 0x81, 0x81, 0x81, 0x00])
+        data = bytearray([0x02, 0x06, 0x00, 0x81, 0x81, 0x81, 0x03])
         set_recv(data, mock_socket)
         software_number, hardware_number, reset_value = control.test_device_one()
         expected_request = bytearray([0x02, 0x03, 0x00, 0x01])
         proof_send_call(expected_request, mock_socket)
         assert software_number == 0x81
         assert hardware_number == 0x81
-        # print(reset_value)
-        # assert ResetType.POWER_ON_RESET in reset_value
-        # assert ResetType.EXTERNAL_RESET in reset_value
-        # assert ResetType.BROWN_OUT_RESET not in reset_value
+        print(reset_value)
+        assert ResetType.POWER_ON_RESET in reset_value
+        assert ResetType.EXTERNAL_RESET in reset_value
+        assert ResetType.BROWN_OUT_RESET not in reset_value
 
     def test_test_device_two(self, control, mock_socket):
         data = bytearray([0x02, 0x06, 0x00, 0x84, 0x07, 0x00, 0x03])
