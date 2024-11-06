@@ -87,7 +87,7 @@ class ChargebyteBoard:
         self.socket.settimeout(3.0)
         self.mutex = Lock()
 
-    def send_packet(self, service_id: int, payload: bytearray) -> None:
+    def send_package(self, service_id: int, payload: bytearray) -> None:
         self.socket.send(self.build_message(service_id, payload))
 
     def build_message(self, service_id: int, payload: bytearray) -> bytearray:
@@ -144,7 +144,7 @@ class ChargebyteBoard:
     def test_device_one(self) -> tuple[int, int, ResetType]:
         """This service gives access to system reset causes as well as the Software and the Hardware version (one byte each) of the coprocessor"""
 
-        self.send_packet(0x01, bytearray())
+        self.send_package(0x01, bytearray())
         response = self.read_response(0x01)
         self.check_response_length(response, 3)
         software_version = response[0]
@@ -155,7 +155,7 @@ class ChargebyteBoard:
     def test_device_two(self) -> tuple[int, ResetReason]:
         """This service gives access to reset causes (i.e. why the coprocessor restarted) as well as the software build number"""
 
-        self.send_packet(0x04, bytearray())
+        self.send_package(0x04, bytearray())
         response = self.read_response(0x04)
         self.check_response_length(response, 3)
         build = self.join_bytes(response[0], response[1])
@@ -165,7 +165,7 @@ class ChargebyteBoard:
     def get_pwm(self) -> tuple[int, int]:
         """The pulse width of the PWM signal can be read by sending the device-get PWM service."""
 
-        self.send_packet(0x10, bytearray())
+        self.send_package(0x10, bytearray())
         response = self.read_response(0x10)
         self.check_response_length(response, 4)
         frequency = self.join_bytes(response[0], response[1])
@@ -179,7 +179,7 @@ class ChargebyteBoard:
         high_freq = (frequency >> 8) & 0xFF
         low_duty = dutycycle & 0xFF
         high_duty = (dutycycle >> 8) & 0xFF
-        self.send_packet(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
+        self.send_package(0x11, bytearray([low_freq, high_freq, low_duty, high_duty]))
         response = self.read_response(0x11)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
@@ -187,7 +187,7 @@ class ChargebyteBoard:
     def control_pwm(self, control_code: ControlCode) -> StatusPWMGeneration:
         """The control PWM service turns the generation of the PWM on or off or queries the state. This allows you to switch roles between EVSE and EV via software control."""
 
-        self.send_packet(0x12, bytearray([control_code.value]))
+        self.send_package(0x12, bytearray([control_code.value]))
         response = self.read_response(0x12)
         self.check_response_length(response, 1)
         return StatusPWMGeneration(response[0])
@@ -197,7 +197,7 @@ class ChargebyteBoard:
         Device-Get-Ucp is the request for the control pilot (CP) voltage. Due to the fact that the voltage is changing with 1 kHz, the highest and lowest voltage value will be measured. The data resolution is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit. The corresponding request and response are given in the tables below.
         """
 
-        self.send_packet(0x14, bytearray())
+        self.send_package(0x14, bytearray())
         response = self.read_response(0x14)
         self.check_response_length(response, 4)
         positive_cp = self.join_bytes(response[0], response[1])
@@ -221,14 +221,14 @@ class ChargebyteBoard:
             resistance -= 1300
         if resistance >= 347:
             resistance_bits |= 1 << 2
-        self.send_packet(0x15, bytearray([resistance_bits]))
+        self.send_package(0x15, bytearray([resistance_bits]))
         response = self.read_response(0x15)
         self.check_response_length(response, 1)
         return int(response[0])
 
     def lock_unlock_cable_one(self, command: CableLock) -> LockStatus:
         """The device supports two separate locks for locking the charging sockets."""
-        self.send_packet(0x17, bytearray([command.value]))
+        self.send_package(0x17, bytearray([command.value]))
         response = self.read_response(0x17)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
@@ -243,7 +243,7 @@ class ChargebyteBoard:
         The motor fault service could be used to get more information about failures.
         """
 
-        self.send_packet(0x18, bytearray([command.value]))
+        self.send_package(0x18, bytearray([command.value]))
         response = self.read_response(0x18)
         self.check_response_length(response, 1)
         return LockStatus(response[0])
@@ -258,7 +258,7 @@ class ChargebyteBoard:
         Return Value: The status code is 0 if the motor fault pin is not activated. The status code is not 0 if the motor fault pin is activated.
         """
 
-        self.send_packet(0x1A, bytearray())
+        self.send_package(0x1A, bytearray())
         response = self.read_response(0x1A)
         self.check_response_length(response, 1)
         status_code = int(response[0])
@@ -273,7 +273,7 @@ class ChargebyteBoard:
         The data resolution of the measured voltages is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit.
         """
 
-        self.send_packet(0x20, bytearray([interval]))
+        self.send_package(0x20, bytearray([interval]))
         response = self.read_response(0x20)
         self.check_response_length(response, 1)
         return StatusCode(response[0])
@@ -297,7 +297,7 @@ class ChargebyteBoard:
 
         if parameter > 255 or parameter < 1:
             raise ValueError("This parameter is defined between 1 and 255!")
-        self.send_packet(0x31, bytearray([parameter]))
+        self.send_package(0x31, bytearray([parameter]))
         response = self.read_response(0x31)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
@@ -307,7 +307,7 @@ class ChargebyteBoard:
 
         No direct response is sent, we may wait for the first message on Device initialization to double check the reset was performed. The POR message on initialization is currently set to zero.
         """
-        self.send_packet(0x33, bytearray())
+        self.send_package(0x33, bytearray())
         # response = self.read_response(0x33)
         # self.check_response_length(response,1)
         # return response[0]
@@ -315,7 +315,7 @@ class ChargebyteBoard:
     def activate_proximity_pilot_resistor(self, control: ResistorCode) -> ErrorCode:
         """This service enables or disables resistors that load the proximity signal. These resistors are switched between proximity and GND."""
 
-        self.send_packet(0x50, bytearray([control.value]))
+        self.send_package(0x50, bytearray([control.value]))
         response = self.read_response(0x50)
         self.check_response_length(response, 1)
         return ErrorCode(response[0])
@@ -325,7 +325,7 @@ class ChargebyteBoard:
         Control=0 deactivates the pullup, all other values activate the pullup
         """
 
-        self.send_packet(0x51, bytearray([0x03]))
+        self.send_package(0x51, bytearray([0x03]))
         response = self.read_response(0x51)
         self.check_response_length(response, 1)
         return response[0]
@@ -333,7 +333,7 @@ class ChargebyteBoard:
     def disable_proximity_pilot_pullup_5V(self) -> int:
         """There is a pullup resistor of 330 Ohm to +5 V at the proximity pilot signal which can be deactivated with this service. Control=0 deactivates the pullup, all other values activate the pullup."""
 
-        self.send_packet(0x51, bytearray([0x00]))
+        self.send_package(0x51, bytearray([0x00]))
         response = self.read_response(0x51)
         self.check_response_length(response, 1)
         return response[0]
@@ -344,7 +344,7 @@ class ChargebyteBoard:
         return value: is the voltage.
         """
 
-        self.send_packet(0x52, bytearray())
+        self.send_package(0x52, bytearray())
         response = self.read_response(0x52)
         self.check_response_length(response, 2)
         byte_voltage = self.join_bytes(response[0], response[1])
