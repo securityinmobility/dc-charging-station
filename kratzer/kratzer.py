@@ -496,12 +496,14 @@ class Kratzer:
         return bytearray(struct.pack("f", message))
 
     def activate_VES(self) -> None:
-        # self.set_M2S_RS_ACTIVE(1)
-        pass
+        cw1 = self.m2s.values["M2S_RS_CW1"]
+        cw1 |= 0b0001
+        self.set_M2S_RS_CW1(cw1)
 
     def deactivate_VES(self) -> None:
-        # self.set_M2S_RS_ACTIVE(-1)
-        pass
+        cw1 = self.m2s.values["M2S_RS_CW1"]
+        cw1 &= ~0b0001
+        self.set_M2S_RS_CW1(cw1)
 
     def turn_off_VCU(self) -> None:
         pass
