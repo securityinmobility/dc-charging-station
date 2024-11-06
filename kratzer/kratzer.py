@@ -506,4 +506,6 @@ class Kratzer:
         self.set_M2S_RS_CW1(cw1)
 
     def turn_off_VCU(self) -> None:
-        pass
+        cw1 = self.m2s.values["M2S_RS_CW1"]
+        cw1 |= 1 << 6
+        self.set_M2S_RS_CW1(cw1)
