@@ -1,5 +1,6 @@
 from abc import ABC
 from enum import Enum
+from typing import Optional
 
 
 class ChargingState(Enum):
@@ -21,7 +22,6 @@ class ProximityPilotResitorValue(Enum):
     Resistance values between PP and PE as defined in DIN EN 61851-1:2012
     For a short summary see: https://evsim.gonium.net/#der-proximity-plug-pp
     """
-
     Charge63A = 100
     Charge32A = 220
     Charge20A = 680
@@ -115,10 +115,11 @@ class ElectricVehicle(ABC):
         else:
             return round((dutycycle - 64) * 2.5)
 
-    def set_max_charge_current(self, resistance: ProximityPilotResitorValue):
+    def set_max_charge_current(self, resistance: Optional[ProximityPilotResitorValue]):
         """
         Set the maximum charge current communicated to the vehicle through the
         resistor between PP and PE.
+        Giving None as a parameter shall turn off the resistor.
 
         This is only used for AC charging and most of the times already included
         in the charging cable.

@@ -67,12 +67,14 @@ class ChargebyteVehicle(ElectricVehicle):
         return duty_cycle
 
     @override
-    def set_max_charge_current(self, resistance: ProximityPilotResitorValue) -> None:
-        if resistance.value == 100:
+    def set_max_charge_current(self, resistance: Optional[ProximityPilotResitorValue]) -> None:
+        if resistance is None:
+            self.cbb.activate_proximity_pilot_resistor(ResistorCode.OFF)
+        elif resistance.value == 100:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_100)
-        if resistance.value == 220:
+        elif resistance.value == 220:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_220)
-        if resistance.value == 680:
+        elif resistance.value == 680:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_680)
-        if resistance.value == 1500:
+        elif resistance.value == 1500:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_1500)
