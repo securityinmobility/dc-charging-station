@@ -732,8 +732,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
         # TODO
 
     async def stop_charger(self) -> None:
-        # TODO ...
-        pass
+        self.high_voltage_source.set_charging_target(0, 0, 0)
 
     async def get_cp_state(self) -> CpState:
         """Overrides EVSEControllerInterface.set_cp_state()."""
@@ -878,7 +877,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
                 multiplier=1, value=3000, unit="W"
             ),
             evse_maximum_current_limit=PVEVSEMaxCurrentLimit(
-                multiplier=1, value=15, unit="A"
+                multiplier=1, value=10, unit="A"
             ),
             evse_maximum_voltage_limit=PVEVSEMaxVoltageLimit(
                 multiplier=1, value=1000, unit="V"
@@ -916,6 +915,9 @@ class EVSEControllerImpl(EVSEControllerInterface):
     ):
         if is_precharge and (ev_target_current is None or ev_target_current > 0.01):
             ev_target_current = 0.01
+        if ev_target_current < 0.01:
+            ev_target_current = 0.01
+
         if ev_target_voltage is None or ev_target_current is None:
             self.high_voltage_source.set_charging_target(0, 0, 0)
         else:

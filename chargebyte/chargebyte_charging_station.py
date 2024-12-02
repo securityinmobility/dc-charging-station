@@ -79,7 +79,7 @@ class ChargebyteChargingStation(ChargingStation):
         """returns None
         PWM needs to be enabled before we can control it.
         """
-        self.cbb.control_pwm(chargebyte_board.ControlCode(1))
+        self.cbb.control_pwm(ControlCode.ENABLE)
 
     def get_max_charge_current(self) -> ProximityPilotResitorValue:
         precision = 3
