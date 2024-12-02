@@ -6,11 +6,12 @@ from chargebyte.chargebyte_board import ChargebyteBoard, ControlCode, ResistorCo
 
 board = ChargebyteBoard("192.168.188.250", 2020)
 
-board.control_pwm(ControlCode.DISABLE.value)
-time.sleep(5)
+#board.enable_pullup_resistor()
+board.activate_proximity_pilot_resistor(ResistorCode.Ohm_1500)
+time.sleep(1)
 
-board.disable_pullup_resistor()
-board.activate_proximity_pilot_resistor(ResistorCode.OFF.value)
+board.control_pwm(ControlCode.ENABLE)
+board.set_pwm(1000, 50)
 time.sleep(1)
 
 print(board.get_pwm())

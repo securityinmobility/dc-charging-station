@@ -3,7 +3,7 @@ from base_classes import ChargingStation
 from base_classes import ProximityPilotResitorValue
 
 
-class DummyChargingStation(ChargingStation):
+class MockChargingStation(ChargingStation):
     def get_state(self) -> ChargingState:
         return ChargingState.D
 

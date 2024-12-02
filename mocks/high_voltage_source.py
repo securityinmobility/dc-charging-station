@@ -2,7 +2,7 @@ from base_classes import ChargingState
 from base_classes import HighVoltageSource
 
 
-class DummyHighVoltageSource(HighVoltageSource):
+class MockHighVoltageSource(HighVoltageSource):
     def check_insulation(self) -> bool:
         return True
 
