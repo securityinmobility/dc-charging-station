@@ -239,8 +239,8 @@ def get_evse_context():
     evse_data_context.present_active_power_l3 = 10
     evse_data_context.current_regulation_tolerance = 10
     evse_data_context.energy_to_be_delivered = 10
-    evse_data_context.present_current = 1
-    evse_data_context.present_voltage = 351
+    evse_data_context.present_current = 0
+    evse_data_context.present_voltage = 0
     return evse_data_context
 
 
@@ -257,9 +257,14 @@ class EVSEControllerImpl(EVSEControllerInterface):
         self.low_level_abstraction = _low_level_abstraction
 
         self.low_level_abstraction.set_pwm_duty_cycle(5)
+        self.reload_evse_data_context()
 
     def reset_ev_data_context(self):
         self.ev_data_context = EVDataContext()
+
+    def reload_evse_data_context(self):
+        self.evse_data_context.present_voltage = self.high_voltage_source.get_voltage()
+        self.evse_data_context.present_current = self.high_voltage_source.get_current()
 
     # ============================================================================
     # |             COMMON FUNCTIONS (FOR ALL ENERGY TRANSFER MODES)             |
@@ -565,7 +570,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     def is_eim_authorized(self) -> bool:
         """Overrides EVSEControllerInterface.is_eim_authorized()."""
-        return True
+        return False
 
     async def is_authorized(
         self,
@@ -732,6 +737,8 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def get_cp_state(self) -> CpState:
         """Overrides EVSEControllerInterface.set_cp_state()."""
+        self.reload_evse_data_context()
+
         state_map = {
             ChargingState.A: CpState.A1,
             ChargingState.B: CpState.B2,
@@ -890,6 +897,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
     async def start_cable_check(self):
         """Overrides EVSEControllerInterface.start_cable_check()."""
         # TODO ...
+        self.reload_evse_data_context()
         pass
 
     async def get_cable_check_status(self) -> Union[IsolationLevel, None]:
@@ -913,6 +921,8 @@ class EVSEControllerImpl(EVSEControllerInterface):
         else:
             self.high_voltage_source.set_charging_target(ev_target_current, ev_target_voltage, ev_target_voltage)
 
+        self.reload_evse_data_context()
+
     async def is_evse_current_limit_achieved(self) -> bool:
         return False
 
@@ -923,13 +933,13 @@ class EVSEControllerImpl(EVSEControllerInterface):
         return False
 
     async def get_evse_max_voltage_limit(self) -> PVEVSEMaxVoltageLimit:
-        return PVEVSEMaxVoltageLimit(multiplier=0, value=800, unit="V")
+        return PVEVSEMaxVoltageLimit(multiplier=0, value=1000, unit="V")
 
     async def get_evse_max_current_limit(self) -> PVEVSEMaxCurrentLimit:
-        return PVEVSEMaxCurrentLimit(multiplier=0, value=250, unit="A")
+        return PVEVSEMaxCurrentLimit(multiplier=0, value=10, unit="A")
 
     async def get_evse_max_power_limit(self) -> PVEVSEMaxPowerLimit:
-        return PVEVSEMaxPowerLimit(multiplier=1, value=15000, unit="W")
+        return PVEVSEMaxPowerLimit(multiplier=1, value=3000, unit="W")
 
     async def get_dc_charge_params_v20(
         self, energy_service: ServiceV20
@@ -938,11 +948,11 @@ class EVSEControllerImpl(EVSEControllerInterface):
     ]:
         """Override EVSEControllerInterface.get_dc_charge_params_v20()."""
         dc_charge_parameter_discovery_res = DCChargeParameterDiscoveryResParams(
-            evse_max_charge_power=RationalNumber.get_rational_repr(150000),
+            evse_max_charge_power=RationalNumber.get_rational_repr(3000),
             evse_min_charge_power=RationalNumber.get_rational_repr(100),
-            evse_max_charge_current=RationalNumber.get_rational_repr(250),
-            evse_min_charge_current=RationalNumber.get_rational_repr(1),
-            evse_max_voltage=RationalNumber.get_rational_repr(800),
+            evse_max_charge_current=RationalNumber.get_rational_repr(10),
+            evse_min_charge_current=RationalNumber.get_rational_repr(0.1),
+            evse_max_voltage=RationalNumber.get_rational_repr(1000),
             evse_min_voltage=RationalNumber.get_rational_repr(10),
             evse_power_ramp_limit=RationalNumber.get_rational_repr(10),
         )
@@ -1110,7 +1120,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
         """
         Overrides EVSEControllerInterface.ready_to_charge().
         """
-        return self.low_level_abstraction.get_state() == ChargingState.A
+        return self.low_level_abstraction.get_state() == ChargingState.C
 
     async def session_ended(self, current_state: str, reason: str):
         """
