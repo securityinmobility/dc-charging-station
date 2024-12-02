@@ -1,14 +1,12 @@
-from base_classes import ElectricVehicle, ChargingState
-import chargebyte_board
-from chargebyte_board import ResistorCode, ControlCode
-from chargebyte_board import ChargebyteBoard, CableLock
-from typing_extensions import override
 import sys
-from base_classes import ProximityPilotResitorValue
 from time import sleep
+#sys.path.append("..")
 
-sys.path.append("..")
-
+from base_classes import ElectricVehicle, ChargingState
+from chargebyte.chargebyte_board import ResistorCode, ControlCode
+from chargebyte.chargebyte_board import ChargebyteBoard, CableLock
+from typing_extensions import override
+from base_classes import ProximityPilotResitorValue
 
 class ChargebyteVehicle(ElectricVehicle):
     def __init__(
@@ -26,6 +24,7 @@ class ChargebyteVehicle(ElectricVehicle):
         sleep(1)
         self.cbb.set_cp(2700 + 1300)
 
+    @override
     def get_state(self) -> ChargingState:
         precision_interval = 0.3
         positive_voltage, negative_voltage = self.cbb.get_cp()
@@ -41,6 +40,18 @@ class ChargebyteVehicle(ElectricVehicle):
             return ChargingState.E
         return ChargingState.E
 
+    @override
+    def set_state(self, state: ChargingState):
+        if state == ChargingState.A:
+            self.cbb.set_cp(0)
+        elif state == ChargingState.B:
+            self.cbb.set_cp(2700)
+        elif state == ChargingState.C:
+            self.cbb.set_cp(2700 + 1200)
+        else:
+            raise NotImplementedError(f"requested ChargingState {state} not implemented yet")
+
+    @override
     def set_cable_lock(self, locked: bool):
         if locked:
             self.cbb.lock_unlock_cable_one(CableLock(1))
@@ -49,11 +60,13 @@ class ChargebyteVehicle(ElectricVehicle):
             self.cbb.lock_unlock_cable_one(CableLock(0))
             self.cbb.lock_unlock_cable_two(CableLock(0))
 
+    @override
     def get_pwm_duty_cycle(self) -> float:
         _, duty_cycle_int = self.cbb.get_pwm()
         duty_cycle = float(duty_cycle_int) * 0.1
         return duty_cycle
 
+    @override
     def set_max_charge_current(self, resistance: ProximityPilotResitorValue) -> None:
         if resistance.value == 100:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_100)

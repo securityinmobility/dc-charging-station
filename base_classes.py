@@ -80,6 +80,13 @@ class ElectricVehicle(ABC):
         """
         raise NotImplementedError()
 
+    def set_state(self, state: ChargingState):
+        """
+        Set the diode/resistor communication (charging state)
+        Can raise a NotImplementedError if switching to the given ChargingState is not supported/implemented
+        """
+        raise NotImplementedError()
+
     def set_cable_lock(self, locked: bool):
         """
         Lock or release the charging cable
