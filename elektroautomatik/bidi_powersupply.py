@@ -1,10 +1,10 @@
 import sys
 import easy_scpi as scpi
-from typing import override, List
-
-from base_classes import HighVoltageSource
+from typing_extensions import override, List
 
 sys.path.append("..")
+from base_classes import HighVoltageSource
+
 
 class ElektroAutomatikBidiPowersupply(HighVoltageSource):
     def __init__(self, ip: str, port: int, max_power: float):
@@ -16,17 +16,24 @@ class ElektroAutomatikBidiPowersupply(HighVoltageSource):
 
         self.instrument.output("OFF")
 
-        system_max_power = float(self.instrument.system.nominal.power())
+        system_max_power = self._parse_float_with_unit(self.instrument.system.nominal.power(), 'W')
         if system_max_power < max_power:
             raise ValueError(f"powersupply nominal power {system_max_power} is lower than given max_power {max_power}")
 
-        self.max_voltage = float(self.instrument.system.nominal.voltage())
+        self.max_voltage = self._parse_float_with_unit(self.instrument.system.nominal.voltage(), 'V')
         self.max_power = max_power
 
         self.instrument.source.power.limit.high(max_power)
         self.instrument.sink.power.limit.high(max_power)
 
         self._raise_if_errors()
+
+    def __del__(self):
+        self.instrument.disconnect()
+
+    def _parse_float_with_unit(self, value: str, unit: str) -> float:
+        value = value.rstrip(unit).strip()
+        return float(value)
 
     def _read_errors(self) -> List[str]:
         result = []
@@ -49,13 +56,13 @@ class ElektroAutomatikBidiPowersupply(HighVoltageSource):
 
     @override
     def get_voltage(self) -> float:
-        x = float(self.instrument.measure.voltage())
+        x = self._parse_float_with_unit(self.instrument.measure.voltage(), 'V')
         self._raise_if_errors()
         return x
 
     @override
     def get_current(self) -> float:
-        x = float(self.instrument.measure.current())
+        x = self._parse_float_with_unit(self.instrument.measure.current(), 'A')
         self._raise_if_errors()
         return x
 
