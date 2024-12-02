@@ -8,6 +8,8 @@ import logging
 import time
 from typing import Dict, List, Optional, Union
 
+from base_classes import ChargingStation, HighVoltageSource, ChargingState
+
 from iso15118.secc.controller.common import UnknownEnergyService
 from iso15118.secc.controller.evse_data import (
     EVSEACCLLimits,
@@ -247,13 +249,14 @@ class EVSEControllerImpl(EVSEControllerInterface):
     A simulated version of an EVSE controller
     """
 
-    def __init__(self):
+    def __init__(self, _high_voltage_source: HighVoltageSource, _low_level_abstraction: ChargingStation):
         super().__init__()
         self.ev_data_context = EVDataContext()
         self.evse_data_context = get_evse_context()
-        # TODO take HighVoltageSource and ChargingStation abstractions
-        # self.high_voltage_source = ...
-        # self.low_level_abstraction = ...
+        self.high_voltage_source = _high_voltage_source
+        self.low_level_abstraction = _low_level_abstraction
+
+        self.low_level_abstraction.set_pwm_duty_cycle(5)
 
     def reset_ev_data_context(self):
         self.ev_data_context = EVDataContext()
@@ -562,8 +565,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     def is_eim_authorized(self) -> bool:
         """Overrides EVSEControllerInterface.is_eim_authorized()."""
-        return False
-        # TODO
+        return True
 
     async def is_authorized(
         self,
@@ -730,8 +732,18 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def get_cp_state(self) -> CpState:
         """Overrides EVSEControllerInterface.set_cp_state()."""
-        # TODO ...
-        return CpState.C2
+        state_map = {
+            ChargingState.A: CpState.A1,
+            ChargingState.B: CpState.B2,
+            ChargingState.C: CpState.C2,
+            ChargingState.D: CpState.D2,
+            ChargingState.E: CpState.E,
+            ChargingState.F: CpState.F,
+        }
+        state = self.low_level_abstraction.get_state()
+        if state not in state_map:
+            raise ValueError(f"Could not map low level state {state} to iso15118 stack state")
+        return state_map[state]
 
     async def service_renegotiation_supported(self) -> bool:
         """Overrides EVSEControllerInterface.service_renegotiation_supported()."""
@@ -882,8 +894,10 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def get_cable_check_status(self) -> Union[IsolationLevel, None]:
         """Overrides EVSEControllerInterface.get_cable_check_status()."""
-        # TODO ...
-        return IsolationLevel.VALID
+        if self.high_voltage_source.check_insulation():
+            return IsolationLevel.VALID
+        else:
+            return IsolationLevel.FAULT
 
     async def send_charging_command(
         self,
@@ -892,7 +906,12 @@ class EVSEControllerImpl(EVSEControllerInterface):
         is_precharge: bool = False,
         is_session_bpt: bool = False,
     ):
-        pass  # TODO ...
+        if is_precharge and (ev_target_current is None or ev_target_current > 0.01):
+            ev_target_current = 0.01
+        if ev_target_voltage is None or ev_target_current is None:
+            self.high_voltage_source.set_charging_target(0, 0, 0)
+        else:
+            self.high_voltage_source.set_charging_target(ev_target_current, ev_target_voltage, ev_target_voltage)
 
     async def is_evse_current_limit_achieved(self) -> bool:
         return False
@@ -1091,8 +1110,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
         """
         Overrides EVSEControllerInterface.ready_to_charge().
         """
-        # TODO ...
-        return True
+        return self.low_level_abstraction.get_state() == ChargingState.A
 
     async def session_ended(self, current_state: str, reason: str):
         """
