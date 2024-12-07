@@ -6,6 +6,7 @@ This module contains the code to retrieve (hardware-related) data from the EVSE
 import base64
 import logging
 import time
+from asyncio import Event
 from typing import Dict, List, Optional, Union
 
 from base_classes import ChargingStation, HighVoltageSource, ChargingState
@@ -136,11 +137,12 @@ from iso15118.shared.messages.iso15118_20.common_messages import (
     TaxRule,
     TaxRuleList,
 )
-from iso15118.shared.messages.iso15118_20.common_types import EVSEStatus
-from iso15118.shared.messages.iso15118_20.common_types import MeterInfo as MeterInfoV20
-from iso15118.shared.messages.iso15118_20.common_types import RationalNumber
 from iso15118.shared.messages.iso15118_20.common_types import (
+    EVSEStatus,
+    MeterInfo as MeterInfoV20,
+    RationalNumber,
     ResponseCode as ResponseCodeV20,
+    EVSENotification as EVSENotificationV20,
 )
 from iso15118.shared.messages.iso15118_20.dc import (
     BPTDCChargeParameterDiscoveryResParams,
@@ -251,6 +253,10 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     def __init__(self, _high_voltage_source: HighVoltageSource, _low_level_abstraction: ChargingStation):
         super().__init__()
+        self.shall_stop = Event()
+        self.is_busy = Event()
+        self.current_adjust_function = None
+
         self.ev_data_context = EVDataContext()
         self.evse_data_context = get_evse_context()
         self.high_voltage_source = _high_voltage_source
@@ -265,6 +271,9 @@ class EVSEControllerImpl(EVSEControllerInterface):
     def reload_evse_data_context(self):
         self.evse_data_context.present_voltage = self.high_voltage_source.get_voltage()
         self.evse_data_context.present_current = self.high_voltage_source.get_current()
+
+    def set_current_adjust_function(self, f):
+        self.current_adjust_function = f
 
     # ============================================================================
     # |             COMMON FUNCTIONS (FOR ALL ENERGY TRANSFER MODES)             |
@@ -728,11 +737,15 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def set_hlc_charging(self, is_ongoing: bool) -> None:
         """Overrides EVSEControllerInterface.set_hlc_charging()."""
-        pass
-        # TODO
+        if is_ongoing:
+            self.is_busy.set()
+        else:
+            self.is_busy.clear()
 
     async def stop_charger(self) -> None:
         self.high_voltage_source.set_charging_target(0, 0, 0)
+        self.shall_stop.clear()
+        self.is_busy.clear()
 
     async def get_cp_state(self) -> CpState:
         """Overrides EVSEControllerInterface.set_cp_state()."""
@@ -765,25 +778,13 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def get_evse_status(self) -> Optional[EVSEStatus]:
         """Overrides EVSEControllerInterface.get_evse_status()."""
-        # TODO: this function can be generic to all protocols.
-        #       We can make use of the method `get_evse_id`
-        #       or other way to get the evse_id to request
-        #       status of a specific evse_id. We can also use the
-        #       `self.comm_session.protocol` obtained during SAP,
-        #       and inject its value into the `get_evse_status`
-        #       to decide on providing the -2ß EVSEStatus or the
-        #       -2 AC or DC one and the `selected_charging_type_is_ac` in -2
-        #       to decide on returning the ACEVSEStatus or the DCEVSEStatus
-        #
-        # Just as an example, here is how the return could look like
-        # from iso15118.shared.messages.iso15118_20.common_types import (
-        #    EVSENotification as EVSENotificationV20,
-        # )
-        # return EVSEStatus(
-        #        notification_max_delay=0,
-        #        evse_notification=EVSENotificationV20.TERMINATE
-        #    )
-        return None
+        if self.shall_stop.is_set():
+            return EVSEStatus(
+                notification_max_delay=0,
+                evse_notification=EVSENotificationV20.TERMINATE
+            )
+        else:
+            return None
 
     async def set_present_protocol_state(self, state: State):
         logger.info(f"iso15118 state: {str(state)}")
@@ -857,8 +858,12 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
     async def get_dc_evse_status(self) -> DCEVSEStatus:
         """Overrides EVSEControllerInterface.get_dc_evse_status()."""
+        notification = EVSENotificationV2.NONE
+        if self.shall_stop.is_set():
+            notification = EVSENotificationV2.STOP_CHARGING
+
         return DCEVSEStatus(
-            evse_notification=EVSENotificationV2.NONE,
+            evse_notification=notification,
             notification_max_delay=0,
             evse_isolation_status=IsolationLevel.VALID,
             evse_status_code=DCEVSEStatusCode.EVSE_READY,
@@ -917,6 +922,13 @@ class EVSEControllerImpl(EVSEControllerInterface):
             ev_target_current = 0.01
         if ev_target_current < 0.01:
             ev_target_current = 0.01
+
+        if self.current_adjust_function:
+            new_current = self.current_adjust_function(ev_target_current)
+            if new_current > ev_target_current:
+                raise ValueError("power adjust function tried to run too much current!")
+
+            ev_target_current = new_current
 
         if ev_target_voltage is None or ev_target_current is None:
             self.high_voltage_source.set_charging_target(0, 0, 0)

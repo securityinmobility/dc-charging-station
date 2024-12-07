@@ -4,6 +4,15 @@ from base_classes import ProximityPilotResitorValue
 
 
 class MockChargingStation(ChargingStation):
+    # specific Chargebyte functions
+    def enable_pp_resistor(self, resistance = "no parameter given"):
+        print('MockChargingStation.enable_pp_resistor', resistance)
+
+    def disable_pp_resistor(self):
+        print('MockChargingStation.disable_pp_resistor')
+
+
+
     def get_state(self) -> ChargingState:
         print('MockChargingStation.get_state')
         return ChargingState.C

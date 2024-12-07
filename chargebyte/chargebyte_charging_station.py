@@ -14,11 +14,15 @@ sys.path.append("..")
 
 class ChargebyteChargingStation(ChargingStation):
     def __init__(
-        self, host, port, set_pp_resistor: bool = False, resistance: int = 100
+        self, host, port, set_pp_resistor: bool = False
     ):
         """receives host and port. sets frequency to the most used frequency of 1000Hz."""
         self.cbb = ChargebyteBoard(host, port)
-        self.frequency = 1000  # most used frequency, we can change later
+
+        self.enable_pp_resistor()
+        self.set_pwm_duty_cycle(5)
+
+        """
         if set_pp_resistor:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.Ohm_100)
         self.cbb.control_pwm(ControlCode.ENABLE)
@@ -29,6 +33,14 @@ class ChargebyteChargingStation(ChargingStation):
         self.cbb.set_pwm(self.frequency, 50)
         while self.get_state() == ChargingState.B:
             sleep(2.0 / 100)
+        """
+
+    # specific Chargebyte functions
+    def enable_pp_resistor(self, resistance = ResistorCode.Ohm_100):
+        self.cbb.activate_proximity_pilot_resistor(resistance)
+
+    def disable_pp_resistor(self):
+        self.cbb.activate_proximity_pilot_resistor(ResistorCode.OFF)
 
     @override
     def set_cable_lock(self, locked: bool):
@@ -71,15 +83,11 @@ class ChargebyteChargingStation(ChargingStation):
         """
         dutycicle in float represents the % of the cycle. the precision is 0.1, which means floats such as 50,456543 will become 50,4%.
         """
-        self.enable_pwm()
-        duty_cycle = int(duty_cycle * 10)
-        self.cbb.set_pwm(self.frequency, duty_cycle)
-
-    def enable_pwm(self):
-        """returns None
-        PWM needs to be enabled before we can control it.
-        """
-        self.cbb.control_pwm(ControlCode.ENABLE)
+        if duty_cycle == 0:
+            self.cbb.control_pwm(ControlCode.DISABLE)
+        else:
+            self.cbb.control_pwm(ControlCode.ENABLE)
+            self.cbb.set_pwm(1000, int(duty_cycle * 10))
 
     def get_max_charge_current(self) -> ProximityPilotResitorValue:
         precision = 3
