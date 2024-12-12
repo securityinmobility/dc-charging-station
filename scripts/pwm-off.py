@@ -1,4 +1,7 @@
 import time
+import sys
+
+sys.path.insert(0, "...")
 from chargebyte.chargebyte_board import ChargebyteBoard, ControlCode, ResistorCode
 
 # run the following command on the chargebyte board to make this work:
@@ -9,7 +12,7 @@ board = ChargebyteBoard("192.168.188.250", 2020)
 board.control_pwm(ControlCode.DISABLE)
 time.sleep(5)
 
-#board.disable_pullup_resistor()
+# board.disable_pullup_resistor()
 board.activate_proximity_pilot_resistor(ResistorCode.OFF)
 time.sleep(1)
 
