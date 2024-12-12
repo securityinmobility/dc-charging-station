@@ -17,8 +17,8 @@ sleep(1)
 
 print(vehicle.get_pwm_duty_cycle())
 
-#input()
-#vehicle.set_state(ChargingState.A)
+# input()
+# vehicle.set_state(ChargingState.A)
 # TODO turn off PP
 
 """

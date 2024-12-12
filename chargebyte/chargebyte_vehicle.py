@@ -1,12 +1,12 @@
 import sys
 from time import sleep
-#sys.path.append("..")
-
+from typing import Optional
 from base_classes import ElectricVehicle, ChargingState
 from chargebyte.chargebyte_board import ResistorCode, ControlCode
 from chargebyte.chargebyte_board import ChargebyteBoard, CableLock
 from typing_extensions import override
 from base_classes import ProximityPilotResitorValue
+
 
 class ChargebyteVehicle(ElectricVehicle):
     def __init__(
@@ -49,7 +49,9 @@ class ChargebyteVehicle(ElectricVehicle):
         elif state == ChargingState.C:
             self.cbb.set_cp(2700 + 1200)
         else:
-            raise NotImplementedError(f"requested ChargingState {state} not implemented yet")
+            raise NotImplementedError(
+                f"requested ChargingState {state} not implemented yet"
+            )
 
     @override
     def set_cable_lock(self, locked: bool):
@@ -67,7 +69,9 @@ class ChargebyteVehicle(ElectricVehicle):
         return duty_cycle
 
     @override
-    def set_max_charge_current(self, resistance: Optional[ProximityPilotResitorValue]) -> None:
+    def set_max_charge_current(
+        self, resistance: Optional[ProximityPilotResitorValue]
+    ) -> None:
         if resistance is None:
             self.cbb.activate_proximity_pilot_resistor(ResistorCode.OFF)
         elif resistance.value == 100:
