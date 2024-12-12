@@ -1,7 +1,7 @@
 import time
 import sys
 
-sys.path.insert(0, "...")
+sys.path.insert(0, "..")
 from chargebyte.chargebyte_board import ChargebyteBoard, ControlCode, ResistorCode
 
 # run the following command on the chargebyte board to make this work:
