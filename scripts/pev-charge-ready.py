@@ -1,6 +1,10 @@
 from time import sleep
-from base_classes import ProximityPilotResitorValue, ChargingState
+import sys
+
+sys.path.insert(0, "..")
+
 from chargebyte.chargebyte_vehicle import ChargebyteVehicle
+from base_classes import ProximityPilotResitorValue, ChargingState
 
 # run the following command on the chargebyte board to make this work:
 # socat tcp-l:2020,reuseaddr,fork,crlf file:/dev/ttyAPP2,echo=0,b57600,raw
