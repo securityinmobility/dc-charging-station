@@ -1,30 +1,34 @@
 import sys
 import asyncio
+import os
 
 from iso15118.secc import SECCHandler
 from iso15118.secc.secc_settings import Config
 from iso15118.secc.controller.interface import ServiceStatus
 from iso15118.shared.exificient_exi_codec import ExificientEXICodec
 
-sys.path.append('../')
+sys.path.append("../")
 
 from chargebyte.chargebyte_charging_station import ChargebyteChargingStation
 from elektroautomatik.bidi_powersupply import ElektroAutomatikBidiPowersupply
 from iso15118impls.evse_controller import EVSEControllerImpl
-
 from mocks.charging_station import MockChargingStation
 from mocks.high_voltage_source import MockHighVoltageSource
+
 
 async def main():
     """
     Entrypoint function that starts the ISO 15118 code running on
     the SECC (Supply Equipment Communication Controller)
     """
-    low_level = MockChargingStation()
+    charged = os.environ.get("CHARGED")
     psu = MockHighVoltageSource()
+    low_level = MockChargingStation()
 
-    #low_level = ChargebyteChargingStation("192.168.188.250", 2020, True)
-    #psu = ElektroAutomatikBidiPowersupply("192.168.188.100", 5025, 3000)
+    if charged == "charging_station":
+        psu = ElektroAutomatikBidiPowersupply("192.168.188.100", 5025, 3000)
+    elif charged == "vehicle":
+        low_level = ChargebyteChargingStation("192.168.188.250", 2020, True)
 
     config = Config()
     config.load_envs()
@@ -38,9 +42,9 @@ async def main():
         config=config,
     ).start(config.iface)
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.debug("SECC program terminated manually")
-
