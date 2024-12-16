@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import os
+import logging
 
 from iso15118.secc import SECCHandler
 from iso15118.secc.secc_settings import Config
@@ -47,4 +48,5 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
+        logger = logging.getLogger(__name__)
         logger.debug("SECC program terminated manually")
