@@ -1,0 +1,8 @@
+{
+  "number_of_evses": 1,
+  "parameters": [
+	{"evse_id": "DE*SWT*E123456789",
+	  "network_interface": "eth0"
+	}
+  ]
+}
