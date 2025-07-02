@@ -17,19 +17,43 @@ from mocks.charging_station import MockChargingStation
 from mocks.high_voltage_source import MockHighVoltageSource
 
 
+def create_high_voltage_controller(impl_type: str):
+    """Create high voltage controller based on implementation type"""
+    if impl_type == "elektroautomatik":
+        return ElektroAutomatikBidiPowersupply("192.168.188.100", 5025, 3000)
+    elif impl_type == "mock":
+        return MockHighVoltageSource()
+    else:
+        raise ValueError(f"Unknown HIGH_VOLTAGE_CONTROLLER_IMPL: {impl_type}")
+
+
+def create_din_61851_controller(impl_type: str):
+    """Create DIN 61851 controller based on implementation type"""
+    if impl_type == "chargebyte":
+        return ChargebyteChargingStation("192.168.188.250", 2020, True)
+    elif impl_type == "mock":
+        return MockChargingStation()
+    else:
+        raise ValueError(f"Unknown DIN_61851_IMPL: {impl_type}")
+
+
 async def main():
     """
     Entrypoint function that starts the ISO 15118 code running on
     the SECC (Supply Equipment Communication Controller)
     """
-    charged = os.environ.get("CHARGED")
-    psu = MockHighVoltageSource()
-    low_level = MockChargingStation()
-
-    if charged == "charging_station":
-        psu = ElektroAutomatikBidiPowersupply("192.168.188.100", 5025, 3000)
-    elif charged == "vehicle":
-        low_level = ChargebyteChargingStation("192.168.188.250", 2020, True)
+    # Get implementation types from environment variables
+    hv_impl = os.environ.get("HIGH_VOLTAGE_CONTROLLER_IMPL", "mock")
+    din_impl = os.environ.get("DIN_61851_IMPL", "mock")
+     
+    # Create controllers based on configuration
+    try:
+        psu = create_high_voltage_controller(hv_impl)
+        low_level = create_din_61851_controller(din_impl)
+    except ValueError as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Configuration error: {e}")
+        return
 
     config = Config()
     config.load_envs()

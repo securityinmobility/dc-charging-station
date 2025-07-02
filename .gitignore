@@ -1,5 +1,6 @@
 *.pdf
 *.png
 
+__pycache__/
 venv
 kratzer-interface.md
