@@ -3,12 +3,6 @@ This module contains the code to retrieve (hardware-related) data from the EVSE
 (Electric Vehicle Supply Equipment).
 """
 
-### SLAC IMPORTS ###
-from pyslac.environment import Config as SlacConfig
-from pyslac.session import SlacEvseSession, SlacSessionController
-
-### OTHER IMPORTS ###
-
 import base64
 import logging
 import time
@@ -252,22 +246,13 @@ def get_evse_context():
     return evse_data_context
 
 
-class EVSEControllerImpl(EVSEControllerInterface, SlacSessionController):
+class EVSEControllerImpl(EVSEControllerInterface):
     """
-    A simulated version of an EVSE controller that handles both
-    ISO 15118-2/20 and SLAC (ISO 15118-3) communication.
+    A simulated version of an EVSE controller
     """
 
-    def __init__(self, _high_voltage_source: HighVoltageSource, _low_level_abstraction: ChargingStation, slac_config: SlacConfig):
-         # Initialize parent classes
-        EVSEControllerInterface.__init__(self)
-        SlacSessionController.__init__(self)
-
-        # SLAC-specific attributes
-        self.slac_config = slac_config
-        self.running_sessions: List["SlacEvseSession"] = []
-
-        # EVSEControllerInterface attributes
+    def __init__(self, _high_voltage_source: HighVoltageSource, _low_level_abstraction: ChargingStation):
+        super().__init__()
         self.shall_stop = Event()
         self.is_busy = Event()
         self.current_adjust_function = None
@@ -1172,45 +1157,3 @@ class EVSEControllerImpl(EVSEControllerInterface, SlacSessionController):
         Overrides EVSEControllerInterface.send_rated_limits
         """
         logger.info("Send rated limits to CS.")
-
-
-    # ============================================================================
-    # |             SLAC (ISO 15118-3) MANAGEMENT FUNCTIONS                      |
-    # ============================================================================
-
-    async def start_slac_sessions(self, cs_config: dict):
-        """Initializes all SLAC sessions based on the provided JSON config."""
-        if cs_config["number_of_evses"] < 1 or (
-            len(cs_config["parameters"]) != cs_config["number_of_evses"]
-        ):
-            raise AttributeError("Number of evses provided is invalid.")
-
-        for evse_params in cs_config["parameters"]:
-            evse_id: str = evse_params["evse_id"]
-            network_interface: str = evse_params["network_interface"]
-            try:
-                slac_session = SlacEvseSession(
-                    evse_id, network_interface, self.slac_config
-                )
-                await slac_session.evse_set_key()
-                self.running_sessions.append(slac_session)
-                logger.info(f"SLAC session initialized for {evse_id} on {network_interface}")
-            except (OSError, TimeoutError, ValueError) as e:
-                logger.error(
-                    f"PLC chip initialization failed for EVSE {evse_id}, "
-                    f"interface {network_interface}: {e}. \n"
-                    f"Please check your settings."
-                )
-        if not self.running_sessions:
-            raise RuntimeError("Could not initialize any SLAC sessions.")
-
-    async def notify_matching_ongoing(self, evse_id: str):
-        """Overrides the notify_matching_ongoing method from SlacSessionController."""
-        logger.info(f"SLAC matching is ongoing for {evse_id}")
-
-    async def enable_hlc_charging(self, evse_id: str):
-        """Overrides the enable_hlc_charging method from SlacSessionController."""
-        logger.info(f"Enable PWM and set 5% duty cycle for evse {evse_id}")
-        # In a real implementation, you would call your low_level_controller here
-        # e.g., await self.low_level_abstraction.set_pwm_duty_cycle(5)
-    
