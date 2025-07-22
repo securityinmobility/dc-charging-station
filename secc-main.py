@@ -8,7 +8,7 @@ from iso15118.secc.secc_settings import Config
 from iso15118.secc.controller.interface import ServiceStatus
 from iso15118.shared.exificient_exi_codec import ExificientEXICodec
 
-from iso15118impls.slac_session import get_slac_handler, get_cs_config
+from iso15118impls.slac_session import get_slac_handler
 from pyslac.utils import wait_for_tasks
 
 sys.path.append("../")
@@ -48,7 +48,8 @@ async def main():
     # Get implementation types from environment variables
     hv_impl = os.environ.get("HIGH_VOLTAGE_CONTROLLER_IMPL", "mock")
     din_impl = os.environ.get("DIN_61851_IMPL", "mock")
-    network_interface = os.environ.get("NETWORK_INTERFACE", "eth0") # One interface can be set
+    network_interface = os.environ.get("NETWORK_INTERFACE", "eth0") 
+    evse_id = os.environ.get("EVSE_ID", "DE*THI*H007000000") 
 
     # Create controllers based on configuration
     try:
@@ -76,7 +77,7 @@ async def main():
 
     tasks = [
         secc_handler.start(config.iface),
-        slac_handler.start(get_cs_config(network_interface)),
+        slac_handler.start(network_interface, evse_id),
     ]
 
     await wait_for_tasks(tasks)
