@@ -20,7 +20,6 @@ class ChargebyteChargingStation(ChargingStation):
         self.cbb = ChargebyteBoard(host, port)
 
         self.enable_pp_resistor()
-        self.set_pwm_duty_cycle(5)
 
         """
         if set_pp_resistor:
