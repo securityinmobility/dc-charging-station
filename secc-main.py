@@ -48,7 +48,8 @@ async def main():
     # Get implementation types from environment variables
     hv_impl = os.environ.get("HIGH_VOLTAGE_CONTROLLER_IMPL", "mock")
     din_impl = os.environ.get("DIN_61851_IMPL", "mock")
-     
+    network_interface = os.environ.get("NETWORK_INTERFACE", "eth0") # One interface can be set
+
     # Create controllers based on configuration
     try:
         psu = create_high_voltage_controller(hv_impl)
@@ -75,7 +76,7 @@ async def main():
 
     tasks = [
         secc_handler.start(config.iface),
-        slac_handler.start(get_cs_config()),
+        slac_handler.start(get_cs_config(network_interface)),
     ]
 
     await wait_for_tasks(tasks)

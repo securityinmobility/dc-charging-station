@@ -1,8 +1,8 @@
 iso15118 @ git+https://github.com/EcoG-io/iso15118@676b315
+pyslac @ git+https://github.com/EcoG-io/pyslac@51ed0d6
+
 easy-scpi==0.1.5
 asyncio==3.4.3
 pyvisa-py==0.7.2
 
 pytest==8.3.4
-
--e ../pyslac
