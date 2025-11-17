@@ -824,9 +824,9 @@ class EVSEControllerImpl(EVSEControllerInterface):
     ]:
         """Overrides EVSEControllerInterface.get_ac_charge_params_v20()."""
         ac_charge_parameter_discovery_res_params = ACChargeParameterDiscoveryResParams(
-            evse_max_charge_power=RationalNumber.get_rational_repr(30000),
-            evse_max_charge_power_l2=RationalNumber.get_rational_repr(30000),
-            evse_max_charge_power_l3=RationalNumber.get_rational_repr(30000),
+            evse_max_charge_power=RationalNumber.get_rational_repr(3000),
+            evse_max_charge_power_l2=RationalNumber.get_rational_repr(3000),
+            evse_max_charge_power_l3=RationalNumber.get_rational_repr(3000),
             evse_min_charge_power=RationalNumber.get_rational_repr(100),
             evse_min_charge_power_l2=RationalNumber.get_rational_repr(100),
             evse_min_charge_power_l3=RationalNumber.get_rational_repr(100),
@@ -842,9 +842,9 @@ class EVSEControllerImpl(EVSEControllerInterface):
         elif energy_service == ServiceV20.AC_BPT:
             return BPTACChargeParameterDiscoveryResParams(
                 **(ac_charge_parameter_discovery_res_params.dict()),
-                evse_max_discharge_power=RationalNumber.get_rational_repr(30000),
-                evse_max_discharge_power_l2=RationalNumber.get_rational_repr(30000),
-                evse_max_discharge_power_l3=RationalNumber.get_rational_repr(30000),
+                evse_max_discharge_power=RationalNumber.get_rational_repr(3000),
+                evse_max_discharge_power_l2=RationalNumber.get_rational_repr(3000),
+                evse_max_discharge_power_l3=RationalNumber.get_rational_repr(3000),
                 evse_min_discharge_power=RationalNumber.get_rational_repr(100),
                 evse_min_discharge_power_l2=RationalNumber.get_rational_repr(100),
                 evse_min_discharge_power_l3=RationalNumber.get_rational_repr(100),
@@ -879,22 +879,22 @@ class EVSEControllerImpl(EVSEControllerInterface):
                 evse_status_code=DCEVSEStatusCode.EVSE_READY,
             ),
             evse_maximum_power_limit=PVEVSEMaxPowerLimit(
-                multiplier=1, value=3000, unit="W"
+                multiplier=0, value=3000, unit="W"
             ),
             evse_maximum_current_limit=PVEVSEMaxCurrentLimit(
-                multiplier=1, value=10, unit="A"
+                multiplier=0, value=10, unit="A"
             ),
             evse_maximum_voltage_limit=PVEVSEMaxVoltageLimit(
-                multiplier=1, value=1000, unit="V"
+                multiplier=0, value=1000, unit="V"
             ),
             evse_minimum_current_limit=PVEVSEMinCurrentLimit(
-                multiplier=1, value=1, unit="A"
+                multiplier=0, value=1, unit="A"
             ),
             evse_minimum_voltage_limit=PVEVSEMinVoltageLimit(
-                multiplier=1, value=1, unit="V"
+                multiplier=0, value=1, unit="V"
             ),
             evse_peak_current_ripple=PVEVSEPeakCurrentRipple(
-                multiplier=1, value=10, unit="A"
+                multiplier=0, value=1, unit="A"
             ),
         )
 
@@ -930,10 +930,16 @@ class EVSEControllerImpl(EVSEControllerInterface):
 
             ev_target_current = new_current
 
+        target_min_voltage = self.evse_data_context.present_voltage - 5
+        if target_min_voltage < 0:
+            target_min_voltage = 0
+        if is_precharge:
+            target_min_voltage = ev_target_voltage
+
         if ev_target_voltage is None or ev_target_current is None:
             self.high_voltage_source.set_charging_target(0, 0, 0)
         else:
-            self.high_voltage_source.set_charging_target(ev_target_current, ev_target_voltage, ev_target_voltage)
+            self.high_voltage_source.set_charging_target(ev_target_current, target_min_voltage, ev_target_voltage)
 
         self.reload_evse_data_context()
 
@@ -953,7 +959,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
         return PVEVSEMaxCurrentLimit(multiplier=0, value=10, unit="A")
 
     async def get_evse_max_power_limit(self) -> PVEVSEMaxPowerLimit:
-        return PVEVSEMaxPowerLimit(multiplier=1, value=3000, unit="W")
+        return PVEVSEMaxPowerLimit(multiplier=0, value=3000, unit="W")
 
     async def get_dc_charge_params_v20(
         self, energy_service: ServiceV20
