@@ -4,7 +4,7 @@
 
 This repository contains glue code in order to create a fully working DC charging station.
 
-In our case we use [open-plc-utils](https://github.com/qca/open-plc-utils) for SLAC, [EcoG-io/iso15118](https://github.com/EcoG-io/iso15118) for the ISO15118 stack, an [EVAcharge SE](https://chargebyte.com/controllers-and-modules/evse-controllers/evacharge-se) for powerline communication and a ~~[Kratzer Automation battery tester](https://www.ni.com/de/shop/power-electronics-test-systems.html)~~ [EA-PSB 11000-10](https://elektroautomatik.com/shop/en/products/programmable-dc-laboratory-power-supplies/bidirectional-dc-laboratory-power-supplies/series-psb-10000-2u-1-5-3kw/1147/bi-directional-power-supply) as a bidirectional HV power supply.
+In our case we use ~~[open-plc-utils](https://github.com/qca/open-plc-utils)~~ [EcoG-io/pyslac](https://github.com/EcoG-io/pyslac) for SLAC, [EcoG-io/iso15118](https://github.com/EcoG-io/iso15118) for the ISO15118 stack, an [EVAcharge SE](https://chargebyte.com/controllers-and-modules/evse-controllers/evacharge-se) for powerline communication and a ~~[Kratzer Automation battery tester](https://www.ni.com/de/shop/power-electronics-test-systems.html)~~ [EA-PSB 11000-10](https://elektroautomatik.com/shop/en/products/programmable-dc-laboratory-power-supplies/bidirectional-dc-laboratory-power-supplies/series-psb-10000-2u-1-5-3kw/1147/bi-directional-power-supply) as a bidirectional HV power supply.
 
 ## Components
 
@@ -15,13 +15,13 @@ For implementing a charging station you need to implement the `ChargingStation` 
 You can then give them as parameters to the ISO15118 EVSE controller based on [EcoG-io/iso15118](https://github.com/EcoG-io/iso15118).
 This controller will handle vehicle detection, iso15118 communication and high voltage source parameter setting.
 
-The SLAC process is implemented using [EcoG-io/pyslac](https://github.com/EcoG-io/pyslac).
-
 ## Running
 
-For our current main test setup we use an [EVAcharge SE](https://chargebyte.com/products/charging-station-communication/evacharge-se), configured in network bridging mode and a [EA-PSB 11000-10](https://elektroautomatik.com/shop/en/products/programmable-dc-laboratory-power-supplies/bidirectional-dc-laboratory-power-supplies/series-psb-10000-2u-1-5-3kw/1147/bi-directional-power-supply) configured for remote control via SCPI.
+First connect your PC via ethernet to both the EVAcharge and the EA-PSB.
+In our setup both have static IP addresses configured in a /24 network.
+`192.168.188.100` for the EA-PSB and `192.168.188.250` for the evacharge.
 
-First connect to the evacharge via ssh, flash the modem and run socat for forwarding the low level controls.
+Connect to the evacharge via ssh, flash the modem and run socat for forwarding the low level controls.
 
 ```bash
 # ./flash-qca-temporarily.sh
