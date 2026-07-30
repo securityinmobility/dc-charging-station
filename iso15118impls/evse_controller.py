@@ -262,7 +262,7 @@ class EVSEControllerImpl(EVSEControllerInterface):
         self.high_voltage_source = _high_voltage_source
         self.low_level_abstraction = _low_level_abstraction
 
-        self.low_level_abstraction.set_pwm_duty_cycle(5)
+        #self.low_level_abstraction.set_pwm_duty_cycle(5)
         self.reload_evse_data_context()
 
     def reset_ev_data_context(self):

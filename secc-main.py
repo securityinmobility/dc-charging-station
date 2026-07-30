@@ -48,8 +48,8 @@ async def main():
     # Get implementation types from environment variables
     hv_impl = os.environ.get("HIGH_VOLTAGE_CONTROLLER_IMPL", "mock")
     din_impl = os.environ.get("DIN_61851_IMPL", "mock")
-    network_interface = os.environ.get("NETWORK_INTERFACE", "eth0") 
     evse_id = os.environ.get("EVSE_ID", "DE*THI*H007000000") 
+    target_power = int(os.environ.get("TARGET_POWER", "3000"))
 
     # Create controllers based on configuration
     try:
@@ -69,6 +69,18 @@ async def main():
     controller = EVSEControllerImpl(psu, low_level)
     await controller.set_status(ServiceStatus.STARTING)
 
+    def current_adjust(target_current):
+        if target_current < 1:
+            return target_current
+
+        volts = controller.evse_data_context.present_voltage
+        new_target = target_power / volts
+        if abs(new_target) > abs(target_current):
+            return target_current
+
+        return new_target
+    controller.set_current_adjust_function(current_adjust)
+
     secc_handler = SECCHandler(
         exi_codec=ExificientEXICodec(),
         evse_controller=controller,
@@ -77,7 +89,7 @@ async def main():
 
     tasks = [
         secc_handler.start(config.iface),
-        slac_handler.start(network_interface, evse_id),
+        slac_handler.start(config.iface, evse_id),
     ]
 
     await wait_for_tasks(tasks)

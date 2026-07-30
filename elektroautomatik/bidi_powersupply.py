@@ -89,10 +89,11 @@ class ElektroAutomatikBidiPowersupply(HighVoltageSource):
             current = (current / abs(current)) * max_current
 
         if current < 0:
+            self.instrument.source.voltage(min_voltage)
             self.instrument.sink.current(-1 * current)
             self.instrument.output("ON")
         else:
-            self.instrument.source.voltage(min_voltage)
+            self.instrument.source.voltage(max_voltage)
             self.instrument.source.current(current)
             self.instrument.output("ON")
 

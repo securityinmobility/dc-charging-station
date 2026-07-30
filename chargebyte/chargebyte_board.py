@@ -192,7 +192,7 @@ class ChargebyteBoard:
         self.check_response_length(response, 1)
         return StatusPWMGeneration(response[0])
 
-    def get_cp(self) -> tuple[int, int]:
+    def get_cp(self) -> tuple[float, float]:
         """
         Device-Get-Ucp is the request for the control pilot (CP) voltage. Due to the fact that the voltage is changing with 1 kHz, the highest and lowest voltage value will be measured. The data resolution is 10 bit. The measuring limit is set by the maximum of ±15 V. The resolution is 29 mV/bit. The corresponding request and response are given in the tables below.
         """
@@ -200,8 +200,8 @@ class ChargebyteBoard:
         self.send_package(0x14, bytearray())
         response = self.read_response(0x14)
         self.check_response_length(response, 4)
-        positive_cp = self.join_bytes(response[0], response[1])
-        negative_cp = self.join_bytes(response[2], response[3])
+        positive_cp = int.from_bytes(response[0 : 2], 'little', signed=True) * 29 / 1000
+        negative_cp = int.from_bytes(response[2 : 4], 'little', signed=True) * 29 / 1000
         return positive_cp, negative_cp
 
     def set_cp(self, resistance: int) -> int:

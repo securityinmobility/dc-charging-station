@@ -19,7 +19,7 @@ class ChargebyteChargingStation(ChargingStation):
         """receives host and port. sets frequency to the most used frequency of 1000Hz."""
         self.cbb = ChargebyteBoard(host, port)
 
-        self.enable_pp_resistor()
+        self.enable_pp_resistor(ResistorCode.Ohm_1500)
 
         """
         if set_pp_resistor:
