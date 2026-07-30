@@ -18,6 +18,7 @@ from elektroautomatik.bidi_powersupply import ElektroAutomatikBidiPowersupply
 from iso15118impls.evse_controller import EVSEControllerImpl
 from mocks.charging_station import MockChargingStation
 from mocks.high_voltage_source import MockHighVoltageSource
+from pki.chargebyte import obtain_certificate
 
 
 def create_high_voltage_controller(impl_type: str):
@@ -40,6 +41,29 @@ def create_din_61851_controller(impl_type: str):
         raise ValueError(f"Unknown DIN_61851_IMPL: {impl_type}")
 
 
+async def update_certificate(evse_id: str):
+    """Make sure we have an up to date SECC certificate from the Hubject PKI.
+
+    Only runs if Hubject credentials are configured. Failures are logged but do
+    not stop the charging station, it can still be used without Plug & Charge.
+    """
+    logger = logging.getLogger(__name__)
+    if not os.environ.get("HUBJECT_CLIENT_ID") or not os.environ.get(
+        "HUBJECT_CLIENT_SECRET"
+    ):
+        logger.info(
+            "HUBJECT_CLIENT_ID/HUBJECT_CLIENT_SECRET are not set, "
+            "using the stored certificates as they are"
+        )
+        return
+
+    try:
+        certificate = await asyncio.to_thread(obtain_certificate, evse_id)
+        logger.info(f"Using the SECC certificate {certificate}")
+    except Exception as e:
+        logger.error(f"Could not obtain a SECC certificate from Hubject: {e}")
+
+
 async def main():
     """
     Entrypoint function that starts the ISO 15118 code running on
@@ -50,6 +74,8 @@ async def main():
     din_impl = os.environ.get("DIN_61851_IMPL", "mock")
     evse_id = os.environ.get("EVSE_ID", "DE*THI*H007000000") 
     target_power = int(os.environ.get("TARGET_POWER", "3000"))
+
+    await update_certificate(evse_id)
 
     # Create controllers based on configuration
     try:
