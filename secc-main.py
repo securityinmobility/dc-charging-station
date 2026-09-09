@@ -18,7 +18,7 @@ from elektroautomatik.bidi_powersupply import ElektroAutomatikBidiPowersupply
 from iso15118impls.evse_controller import EVSEControllerImpl
 from mocks.charging_station import MockChargingStation
 from mocks.high_voltage_source import MockHighVoltageSource
-from pki.chargebyte import obtain_certificate
+from pki.hubject import obtain_certificate
 
 
 def create_high_voltage_controller(impl_type: str):
