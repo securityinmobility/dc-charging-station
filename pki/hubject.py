@@ -663,7 +663,7 @@ if __name__ == "__main__":
     )
     print(
         obtain_certificate(
-            os.environ.get("EVSE_ID", "DE*THI*H007000000"),
+            os.environ.get("EVSE_ID", "XX*THI*H007000000"),
             force=os.environ.get("FORCE_CERTIFICATE_ENROLLMENT", "").lower()
             in ("1", "true", "yes"),
         )
