@@ -13,12 +13,14 @@ from pyslac.utils import wait_for_tasks
 
 sys.path.append("../")
 
+from base_classes import V2GPki
 from chargebyte.chargebyte_charging_station import ChargebyteChargingStation
 from elektroautomatik.bidi_powersupply import ElektroAutomatikBidiPowersupply
 from iso15118impls.evse_controller import EVSEControllerImpl
 from mocks.charging_station import MockChargingStation
 from mocks.high_voltage_source import MockHighVoltageSource
-from pki.hubject import obtain_certificate
+from pki.hubject import HubjectV2GPki
+from pki.mock import MockV2GPki
 
 
 def create_high_voltage_controller(impl_type: str):
@@ -41,27 +43,34 @@ def create_din_61851_controller(impl_type: str):
         raise ValueError(f"Unknown DIN_61851_IMPL: {impl_type}")
 
 
-async def update_certificate(evse_id: str):
-    """Make sure we have an up to date SECC certificate from the Hubject PKI.
+def create_v2g_pki(impl_type: str):
+    """Create Plug & Charge PKI access based on implementation type"""
+    if impl_type == "hubject":
+        return HubjectV2GPki()
+    elif impl_type == "mock":
+        return MockV2GPki()
+    else:
+        raise ValueError(f"Unknown V2G_PKI_IMPL: {impl_type}")
 
-    Only runs if Hubject credentials are configured. Failures are logged but do
-    not stop the charging station, it can still be used without Plug & Charge.
+
+def default_v2g_pki_impl() -> str:
+    """Hubject needs credentials, without them there is no Plug & Charge"""
+    if os.environ.get("HUBJECT_CLIENT_ID") and os.environ.get("HUBJECT_CLIENT_SECRET"):
+        return "hubject"
+    return "mock"
+
+
+async def update_certificate(pki: V2GPki, evse_id: str):
+    """Make sure we have an up to date SECC certificate.
+
+    Failures are logged but do not stop the charging station, it can still be
+    used with the stored certificates (or without TLS at all).
     """
     logger = logging.getLogger(__name__)
-    if not os.environ.get("HUBJECT_CLIENT_ID") or not os.environ.get(
-        "HUBJECT_CLIENT_SECRET"
-    ):
-        logger.info(
-            "HUBJECT_CLIENT_ID/HUBJECT_CLIENT_SECRET are not set, "
-            "using the stored certificates as they are"
-        )
-        return
-
     try:
-        certificate = await asyncio.to_thread(obtain_certificate, evse_id)
-        logger.info(f"Using the SECC certificate {certificate}")
+        await asyncio.to_thread(pki.update_secc_certificate, evse_id)
     except Exception as e:
-        logger.error(f"Could not obtain a SECC certificate from Hubject: {e}")
+        logger.error(f"Could not obtain a SECC certificate: {e}")
 
 
 async def main():
@@ -72,19 +81,21 @@ async def main():
     # Get implementation types from environment variables
     hv_impl = os.environ.get("HIGH_VOLTAGE_CONTROLLER_IMPL", "mock")
     din_impl = os.environ.get("DIN_61851_IMPL", "mock")
+    pki_impl = os.environ.get("V2G_PKI_IMPL", default_v2g_pki_impl())
     evse_id = os.environ.get("EVSE_ID", "DE*THI*H007000000") 
     target_power = int(os.environ.get("TARGET_POWER", "3000"))
-
-    await update_certificate(evse_id)
 
     # Create controllers based on configuration
     try:
         psu = create_high_voltage_controller(hv_impl)
         low_level = create_din_61851_controller(din_impl)
+        pki = create_v2g_pki(pki_impl)
     except ValueError as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Configuration error: {e}")
         return
+
+    await update_certificate(pki, evse_id)
 
     config = Config()
     config.load_envs()
@@ -92,7 +103,7 @@ async def main():
 
     slac_handler = get_slac_handler(low_level)
     
-    controller = EVSEControllerImpl(psu, low_level)
+    controller = EVSEControllerImpl(psu, low_level, pki)
     await controller.set_status(ServiceStatus.STARTING)
 
     def current_adjust(target_current):

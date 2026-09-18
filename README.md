@@ -50,6 +50,7 @@ These variables control the main application logic and the selection of hardware
 | `NETWORK_INTERFACE` | `eth0` | The network interface name (e.g., `enx7cc2c61f051e`) used for the communication. |
 | `HIGH_VOLTAGE_CONTROLLER_IMPL` | `mock` | Specifies which implementation of the `HighVoltageSource` abstract base class to use. |
 | `DIN_61851_IMPL` | `mock` | Specifies which implementation to use for the basic PWM signaling according to IEC 61851-1. |
+| `V2G_PKI_IMPL` | `hubject` if `HUBJECT_CLIENT_ID` and `HUBJECT_CLIENT_SECRET` are set, `mock` otherwise | Specifies which implementation of the `V2GPki` abstract base class to use, i.e. which Plug & Charge PKI provider to talk to. `mock` keeps the stored certificates and tells vehicles that no contract certificate is available. |
 | `FREE_CHARGING_SERVICE` | `False` | If set to `True`, the charging service is provided without requiring authorization. |
 
 ### **pyslac (SLAC Protocol)**
@@ -79,13 +80,13 @@ These variables configure the SECC (Supply Equipment Communication Controller) a
 | `USE_CPO_BACKEND` | `False` | Set to `True` to indicate that a CPO (Charge Point Operator) backend is available to fetch certificates or authorization data. |
 | `ENABLE_TLS_1_3` | `False` | Set to `True` to enable the use of TLS version 1.3 for the communication link between the SECC and the EVCC. |
 
-### **Hubject PKI (`pki/chargebyte.py`)**
+### **Hubject PKI (`pki/hubject.py`)**
 
-`pki/chargebyte.py` registers this charging station at the Hubject OPCP PKI and keeps the SECC leaf certificate up to date.
+`pki/hubject.py` registers this charging station at the Hubject OPCP PKI and keeps the SECC leaf certificate up to date.
 It writes `seccLeafCert.pem`, `cpoCertChain.pem`, the CA certificates and the private key into `<PKI_PATH>/iso15118_2/`, i.e. exactly where the iso15118 stack looks for them.
 
 ```bash
-$ HUBJECT_CLIENT_ID=... HUBJECT_CLIENT_SECRET=... EVSE_ID='DE*THI*H007000000' python3 -m pki.chargebyte
+$ HUBJECT_CLIENT_ID=... HUBJECT_CLIENT_SECRET=... EVSE_ID='DE*THI*H007000000' python3 -m pki.hubject
 ```
 
 Nothing is requested as long as the stored certificate belongs to the given EVSE ID, matches the stored private key, has a complete chain and does not expire within the next `HUBJECT_RENEW_BEFORE_DAYS` days.
@@ -105,6 +106,18 @@ Nothing is requested as long as the stored certificate belongs to the given EVSE
 | `HUBJECT_RENEW_BEFORE_DAYS` | `14` | Renew the certificate this many days before it expires. |
 | `HUBJECT_MANUFACTURER`, `HUBJECT_DEVICE_NAME`, `HUBJECT_DEVICE_SW_VERSION`, `HUBJECT_EVSE_SERIAL`, `HUBJECT_OCPP_VERSION` | `chargebyte`, `EVAcharge SE`, `1.0`, `1`, `2.0.1` | Device information sent to Hubject when registering the EVSE ID. |
 | `FORCE_CERTIFICATE_ENROLLMENT` | `False` | Request a new certificate even if the stored one is still valid. |
+
+#### Plug & Charge (contract certificates)
+
+When a vehicle sends a `CertificateInstallationReq`, the SECC forwards it to the Hubject Contract Certificate Pool (`POST /v1/ccp/signedContractData`) and hands the `CertificateInstallationRes` it gets back to the vehicle unchanged - the contract private key is encrypted for the vehicle, the charging station never sees it.
+
+This requires `USE_CPO_BACKEND=True`, otherwise the iso15118 stack builds the response itself from the local PKI and never asks the `V2GPki`.
+With `V2G_PKI_IMPL=mock` (the default without Hubject credentials) vehicles are always answered with `FAILED_NO_CERTIFICATE_AVAILABLE`.
+
+```bash
+$ USE_CPO_BACKEND=True AUTH_MODES=PNC SECC_ENFORCE_TLS=True \
+    HUBJECT_CLIENT_ID=... HUBJECT_CLIENT_SECRET=... python3 secc-main.py
+```
 
 ## Unit Tests
 

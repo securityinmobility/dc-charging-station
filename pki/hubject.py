@@ -13,6 +13,12 @@ Running :func:`obtain_certificate` does the following:
 
 The files are written into the PKI directory used by the iso15118 stack, i.e.
 ``<PKI_PATH>/iso15118_2/{certs,csrs,private_keys}``.
+
+Besides the SECC certificate, this module also implements the other half of
+Plug & Charge: :func:`get_signed_contract_data` hands the EXI encoded
+``CertificateInstallationReq`` of a vehicle to the Hubject Contract Certificate
+Pool (CCP) and returns the ``CertificateInstallationRes`` signed by the
+mobility operator, ready to be sent back to the EV.
 """
 
 import base64
@@ -21,6 +27,9 @@ import logging
 import os
 import re
 import secrets
+import ssl
+import threading
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -28,6 +37,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
+from base_classes import NoCertificateAvailable, V2GPki
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -239,6 +249,12 @@ def _request(
 
 def login(config: HubjectConfig) -> str:
     """Step 1: get an OAuth2 access token for the Hubject API."""
+    access_token, _ = _login(config)
+    return access_token
+
+
+def _login(config: HubjectConfig) -> Tuple[str, float]:
+    """The actual token request, returns the token and its lifetime in seconds."""
     body = json.dumps(
         {
             "client_id": config.client_id,
@@ -254,9 +270,37 @@ def login(config: HubjectConfig) -> str:
         body=body,
         headers={"Content-Type": "application/json"},
     )
-    access_token = json.loads(response)["access_token"]
+    payload = json.loads(response)
     logger.debug("Got an access token for %s", config.audience)
-    return access_token
+    return payload["access_token"], float(payload.get("expires_in", 0))
+
+
+# Contract certificates are fetched while the vehicle is waiting for its
+# CertificateInstallationRes, so the token is cached instead of logging in for
+# every charging session. Hubject tokens are valid for a day.
+_TOKEN_EXPIRY_MARGIN = 60.0
+_token_cache: Dict[Tuple[str, str, str], Tuple[str, float]] = {}
+_token_lock = threading.Lock()
+
+
+def get_access_token(config: HubjectConfig, force_refresh: bool = False) -> str:
+    """Like :func:`login`, but reuses a token until shortly before it expires."""
+    key = (config.token_url, config.audience, config.client_id)
+    with _token_lock:
+        cached = _token_cache.get(key)
+        if cached and not force_refresh and cached[1] > time.monotonic():
+            return cached[0]
+
+        access_token, expires_in = _login(config)
+        if expires_in > _TOKEN_EXPIRY_MARGIN:
+            _token_cache[key] = (
+                access_token,
+                time.monotonic() + expires_in - _TOKEN_EXPIRY_MARGIN,
+            )
+        else:
+            # No (or a very short) lifetime given, do not cache it at all
+            _token_cache.pop(key, None)
+        return access_token
 
 
 def _auth_headers(access_token: str, **extra: str) -> Dict[str, str]:
@@ -611,17 +655,186 @@ def _write_certificates(paths: PkiPaths, chain: List[x509.Certificate]) -> None:
     )
 
 
-def obtain_certificate(evse_id: str, force: bool = False) -> str:
+# ---------------------------------------------------------------------------
+# Contract Certificate Pool (CCP) - Plug & Charge for the connected vehicle
+# ---------------------------------------------------------------------------
+
+# The CCP answer nests the EXI stream fairly deep and the exact shape differs
+# between the ISO 15118-2 and -20 responses, so the stream is looked up by name.
+CERT_INSTALLATION_RES_KEYS = (
+    "certificateinstallationres",
+    "certificateinstallationresponse",
+)
+
+
+def get_signed_contract_data(
+    base64_encoded_cert_installation_req: str,
+    namespace: str,
+    config: Optional[HubjectConfig] = None,
+) -> str:
+    """``GetSignedContractData``: asks Hubject for the contract certificate of an EV.
+
+    The EXI encoded ``CertificateInstallationReq`` the vehicle sent is handed to
+    the Contract Certificate Pool, which answers with a ready to use, signed
+    ``CertificateInstallationRes`` - the charging station never sees the
+    contract private key, it only forwards the (encrypted) response.
+
+    Args:
+        base64_encoded_cert_installation_req: The base64 encoded EXI stream of
+            the CertificateInstallationReq received from the EV.
+        namespace: The XSD message definition namespace of that message, e.g.
+            ``urn:iso:15118:2:2013:MsgDef``.
+        config: The Hubject configuration, read from the environment if omitted.
+
+    Returns:
+        The base64 encoded EXI stream of the CertificateInstallationRes, to be
+        sent back to the EV as is.
+
+    Raises:
+        NoCertificateAvailable: if the answer contains no CertificateInstallationRes,
+            i.e. the vehicle has no contract certificate at Hubject.
+        RuntimeError: if Hubject rejects the request.
+    """
+    config = config or HubjectConfig.from_env()
+
+    body = json.dumps(
+        {
+            "certificateInstallationReq": base64_encoded_cert_installation_req,
+            "xsdMsgDefNamespace": namespace,
+        }
+    ).encode()
+    url = f"{config.opcp_url}/v1/ccp/signedContractData"
+
+    logger.info(
+        "Asking the Hubject CCP at %s for a contract certificate "
+        "(namespace %s, %d bytes of base64 encoded CertificateInstallationReq)",
+        url,
+        namespace,
+        len(base64_encoded_cert_installation_req),
+    )
+    logger.debug(
+        "CertificateInstallationReq: %s", base64_encoded_cert_installation_req
+    )
+
+    def post(access_token: str) -> bytes:
+        started = time.monotonic()
+        response = _request(
+            url,
+            method="POST",
+            body=body,
+            headers=_auth_headers(
+                access_token,
+                **{"Content-Type": "application/json", "Accept": "application/json"},
+            ),
+        )
+        logger.debug(
+            "The CCP answered with %d bytes after %.0f ms",
+            len(response),
+            (time.monotonic() - started) * 1000,
+        )
+        return response
+
+    try:
+        response = post(get_access_token(config))
+    except RuntimeError as error:
+        # The cached token may have been revoked before it expired
+        if "HTTP 401" not in str(error) and "HTTP 403" not in str(error):
+            logger.error("The Hubject CCP request failed: %s", error)
+            raise
+        logger.info(
+            "The Hubject access token was rejected (%s), logging in again", error
+        )
+        response = post(get_access_token(config, force_refresh=True))
+
+    try:
+        payload = json.loads(response)
+    except ValueError:
+        logger.error(
+            "The Hubject CCP answered with something that is not JSON: %s",
+            response[:500].decode("utf-8", errors="replace"),
+        )
+        raise
+
+    logger.debug("CCP response: %s", json.dumps(payload)[:2000])
+
+    cert_installation_res = _find_cert_installation_res(payload)
+    if not cert_installation_res:
+        # Happens for a vehicle Hubject has no contract certificate for
+        logger.warning(
+            "The CCP has no contract certificate for this vehicle, the response "
+            "only contains the keys %s",
+            ", ".join(sorted(payload)) if isinstance(payload, dict) else type(payload),
+        )
+        raise NoCertificateAvailable(
+            "The Hubject CCP response does not contain a CertificateInstallationRes: "
+            f"{json.dumps(payload)[:500]}"
+        )
+
+    emaids = _find_values(payload, ("emaid",))
+    logger.info(
+        "Hubject returned a signed CertificateInstallationRes (%d bytes)%s",
+        len(cert_installation_res),
+        f" for {', '.join(sorted(emaids))}" if emaids else "",
+    )
+    logger.debug("CertificateInstallationRes: %s", cert_installation_res)
+    return cert_installation_res
+
+
+def _find_cert_installation_res(payload) -> Optional[str]:
+    """Picks the (base64 encoded) CertificateInstallationRes out of the response.
+
+    A successful answer looks like::
+
+        {"CCPResponse": {"emaidContent": [{"messageDef":
+            {"certificateInstallationRes": "<base64 EXI>", ...}}]}}
+
+    but as Hubject keeps changing the wrapping around it, any key named
+    ``certificateInstallationRes`` is accepted, wherever it sits.
+    """
+    matches = _find_values(payload, CERT_INSTALLATION_RES_KEYS)
+    if len(matches) > 1:
+        # Several contracts for one vehicle: the EV asked for the ones it does
+        # not have yet, we can only install a single one, so take the first.
+        logger.info(
+            "Hubject returned %d contract certificates, installing the first one",
+            len(matches),
+        )
+    return matches[0] if matches else None
+
+
+def _find_values(payload, keys: Sequence[str]) -> List[str]:
+    """Collects all string values stored under one of `keys` (case insensitive)."""
+    found: List[str] = []
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if isinstance(value, str) and key.lower() in keys:
+                    found.append(value)
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(payload)
+    return found
+
+
+def obtain_certificate(
+    evse_id: str, force: bool = False, config: Optional[HubjectConfig] = None
+) -> str:
     """Makes sure this station has a valid SECC leaf certificate from Hubject.
 
     Args:
         evse_id: The EVSE ID of this charging point, e.g. ``DE*THI*E1234567``.
         force: Request a new certificate even if the stored one is still valid.
+        config: The Hubject configuration, read from the environment if omitted.
 
     Returns:
         The path to the SECC leaf certificate.
     """
-    config = HubjectConfig.from_env()
+    config = config or HubjectConfig.from_env()
     paths = PkiPaths(get_pki_path())
     paths.create_directories()
 
@@ -654,6 +867,38 @@ def obtain_certificate(evse_id: str, force: bool = False) -> str:
     _write_certificates(paths, chain)
 
     return str(paths.leaf_pem)
+
+
+class HubjectV2GPki(V2GPki):
+    """The :class:`V2GPki` of this repository, backed by the Hubject OPCP API."""
+
+    def __init__(self, config: Optional[HubjectConfig] = None):
+        self.config = config or HubjectConfig.from_env()
+
+    def update_secc_certificate(self, evse_id: str):
+        """Overrides V2GPki.update_secc_certificate(), see obtain_certificate()."""
+        force = os.environ.get("FORCE_CERTIFICATE_ENROLLMENT", "").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        certificate = obtain_certificate(evse_id, force=force, config=self.config)
+        logger.info("Using the SECC certificate %s", certificate)
+
+    def get_contract_certificate(
+        self, base64_encoded_cert_installation_req: str, namespace: str
+    ) -> str:
+        """Overrides V2GPki.get_contract_certificate(), asks the Hubject CCP."""
+        try:
+            return get_signed_contract_data(
+                base64_encoded_cert_installation_req, namespace, self.config
+            )
+        except RuntimeError as error:
+            # Hubject answers 404 for a vehicle without a contract - that is a
+            # regular outcome, not a broken charging station.
+            if "HTTP 404" in str(error):
+                raise NoCertificateAvailable(str(error)) from error
+            raise
 
 
 if __name__ == "__main__":

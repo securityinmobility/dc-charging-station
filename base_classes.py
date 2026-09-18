@@ -163,3 +163,49 @@ class HighVoltageSource(ABC):
         other one is requested, this function shall throw a ValueError.
         """
         raise NotImplementedError()
+
+
+class NoCertificateAvailable(Exception):
+    """
+    Raised by V2GPki implementations when there is no contract certificate for
+    the connected vehicle, which makes the SECC answer the
+    CertificateInstallationReq with FAILED_NO_CERTIFICATE_AVAILABLE.
+    """
+
+
+class V2GPki(ABC):
+    """
+    Access to the Plug & Charge public key infrastructure of a PKI provider
+    (Hubject and the like).
+
+    The functions block, they are usually implemented on top of an HTTP API.
+    """
+
+    def update_secc_certificate(self, evse_id: str):
+        """
+        Make sure the charging station has a valid SECC leaf certificate (and
+        the matching chain) for the given EVSE ID, renewing it if needed.
+        The certificates are stored where the iso15118 stack expects them.
+        """
+        raise NotImplementedError()
+
+    def get_contract_certificate(
+        self, base64_encoded_cert_installation_req: str, namespace: str
+    ) -> str:
+        """
+        Get the contract certificate of the connected vehicle.
+
+        The base64 encoded EXI stream of the CertificateInstallationReq the
+        vehicle sent is handed to the PKI, which answers with a
+        CertificateInstallationRes signed by the mobility operator. That
+        response (again base64 encoded EXI) is returned as is, it is passed on
+        to the vehicle unchanged - the contract private key inside is encrypted
+        for the vehicle, the charging station never sees it.
+
+        `namespace` is the XSD message definition namespace of the request,
+        i.e. 'urn:iso:15118:2:2013:MsgDef' or
+        'urn:iso:std:iso:15118:-20:CommonMessages'.
+
+        Raises a NoCertificateAvailable if the vehicle has no contract.
+        """
+        raise NotImplementedError()
