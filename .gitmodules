@@ -1,0 +1,3 @@
+[submodule "vendors/bmw"]
+	path = vendors/bmw
+	url = https://ec2-3-69-121-34.eu-central-1.compute.amazonaws.com/WolfgangKirmair/esila-mitm-device.git
