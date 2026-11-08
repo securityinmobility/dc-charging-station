@@ -6,3 +6,7 @@ asyncio==3.4.3
 pyvisa-py==0.7.2
 
 pytest==8.3.4
+
+# environs 9.5.0 (pulled in by iso15118) calls marshmallow.__version_info__,
+# which was removed in marshmallow 4.0. Pin to the 3.x line until environs is bumped.
+marshmallow<4

@@ -127,3 +127,14 @@ In the root directory use the following to run all tests:
 ```bash
 pytest .
 ```
+
+** Bug Fixes
+
+### Prerequisites
+
+The ISO 15118 stack encodes/decodes EXI messages using the Java-based
+Exificient library (launched via py4j), so a Java runtime is required.
+
+On Debian/Ubuntu:
+
+    sudo apt install default-jre-headless
