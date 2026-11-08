@@ -86,7 +86,7 @@ These variables configure the SECC (Supply Equipment Communication Controller) a
 It writes `seccLeafCert.pem`, `cpoCertChain.pem`, the CA certificates and the private key into `<PKI_PATH>/iso15118_2/`, i.e. exactly where the iso15118 stack looks for them.
 
 ```bash
-$ HUBJECT_CLIENT_ID=... HUBJECT_CLIENT_SECRET=... EVSE_ID='DE*THI*H007000000' python3 -m pki.hubject
+$ HUBJECT_CLIENT_ID=... HUBJECT_CLIENT_SECRET=... HUBJECT_KEY_PASSWORD=... EVSE_ID='DE*THI*H007000000' python3 -m pki.hubject
 ```
 
 Nothing is requested as long as the stored certificate belongs to the given EVSE ID, matches the stored private key, has a complete chain and does not expire within the next `HUBJECT_RENEW_BEFORE_DAYS` days.
@@ -95,6 +95,7 @@ Nothing is requested as long as the stored certificate belongs to the given EVSE
 |---|---|---|
 | `HUBJECT_CLIENT_ID` | - | OAuth2 client id for the Hubject API. Required. |
 | `HUBJECT_CLIENT_SECRET` | - | OAuth2 client secret for the Hubject API. Required. |
+| `HUBJECT_KEY_PASSWORD` | - | Password encrypting the SECC leaf private key. Required. Only kept in memory, `seccLeafPassword.txt` is no longer used for the SECC key. Changing it makes the stored key unreadable, so a new certificate gets enrolled. |
 | `HUBJECT_ENV` | `qa` | `qa` or `prod`, selects the OPCP base URL and the OAuth audience. |
 | `HUBJECT_TOKEN_URL` | `https://auth.eu.plugncharge.hubject.com/oauth/token` | Token endpoint, the same one for both environments. |
 | `HUBJECT_OPCP_URL` | `https://eu.plugncharge-qa.hubject.com` | OPCP base URL, derived from `HUBJECT_ENV` if not set. |

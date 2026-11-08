@@ -26,7 +26,6 @@ import json
 import logging
 import os
 import re
-import secrets
 import ssl
 import threading
 import time
@@ -71,6 +70,8 @@ class HubjectConfig:
     organization: str
     country: str
     renew_before: timedelta
+    # protects the SECC leaf private key, never written to disk
+    key_password: bytes
     # metadata sent with PutCpo, purely informational for Hubject
     end_entity_info: Dict[str, str] = field(default_factory=dict)
 
@@ -88,6 +89,13 @@ class HubjectConfig:
             raise ValueError(
                 "HUBJECT_CLIENT_ID and HUBJECT_CLIENT_SECRET need to be set in order "
                 "to request a certificate from Hubject"
+            )
+
+        key_password = os.environ.get("HUBJECT_KEY_PASSWORD")
+        if not key_password:
+            raise ValueError(
+                "HUBJECT_KEY_PASSWORD needs to be set, it protects the SECC leaf "
+                "private key"
             )
 
         opcp_url = os.environ.get("HUBJECT_OPCP_URL", OPCP_URLS[environment]).rstrip("/")
@@ -109,6 +117,7 @@ class HubjectConfig:
                     )
                 )
             ),
+            key_password=key_password.encode(),
             end_entity_info={
                 "manufacture": os.environ.get("HUBJECT_MANUFACTURER", "chargebyte"),
                 "deviceName": os.environ.get("HUBJECT_DEVICE_NAME", "EVAcharge SE"),
@@ -142,7 +151,6 @@ class PkiPaths:
         self.csr_der = self.csrs / "seccLeafCert.csr.der"
 
         self.key = self.private_keys / "seccLeaf.key"
-        self.key_password = self.private_keys / "seccLeafPassword.txt"
 
     def create_directories(self) -> None:
         for directory in (self.certs, self.csrs, self.private_keys):
@@ -476,22 +484,22 @@ def build_chain(
     return chain
 
 
-def _load_key_password(paths: PkiPaths) -> bytes:
-    """Reads (or creates) the password protecting the private key.
+def use_key_password_for_tls(password: bytes) -> None:
+    """Makes the iso15118 stack use ``password`` for the SECC leaf private key.
 
-    The iso15118 stack reads this file with `readline().rstrip()`, so the file
-    contains exactly one line.
+    The stack would otherwise read it from ``seccLeafPassword.txt`` next to the
+    key, but the password must not be stored on disk.
     """
-    if paths.key_password.exists():
-        password = paths.key_password.read_text().splitlines()[0].rstrip()
-        if password:
-            return password.encode()
+    from iso15118.shared import security
 
-    password = secrets.token_hex(16)
-    paths.key_password.write_text(f"{password}\n")
-    paths.key_password.chmod(0o600)
-    logger.info("Created a new private key password at %s", paths.key_password)
-    return password.encode()
+    load_from_file = security.load_priv_key_pass
+
+    def load_priv_key_pass(password_path: str) -> bytes:
+        if password_path == security.KeyPasswordPath.SECC_LEAF_KEY_PASSWORD:
+            return password
+        return load_from_file(password_path)
+
+    security.load_priv_key_pass = load_priv_key_pass
 
 
 def _load_private_key(
@@ -839,7 +847,7 @@ def obtain_certificate(
     paths.create_directories()
 
     registered_name, common_name = secc_common_name(evse_id)
-    password = _load_key_password(paths)
+    password = config.key_password
     key = _load_private_key(paths, password)
 
     if not force and _certificate_is_usable(config, paths, common_name, key):
@@ -874,6 +882,7 @@ class HubjectV2GPki(V2GPki):
 
     def __init__(self, config: Optional[HubjectConfig] = None):
         self.config = config or HubjectConfig.from_env()
+        use_key_password_for_tls(self.config.key_password)
 
     def update_secc_certificate(self, evse_id: str):
         """Overrides V2GPki.update_secc_certificate(), see obtain_certificate()."""
